@@ -2,6 +2,9 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
+/.vs
+/__pycache__
+/project env
 /keys.json
 /311213tweets.json
 /301213tweets.json
@@ -68,3 +71,4 @@
 /031113tweets.json
 /021113tweets.json
 /011113tweets.json
+/heatmap.mp4

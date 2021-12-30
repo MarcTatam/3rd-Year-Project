@@ -8,6 +8,7 @@ import open_cdr as cdr
 import geojson
 
 def graph_day_one():
+    """Generates a plot for the first day in the series' activity"""
     df = cdr.merge_countries("2013-11-01")
     selected_df = df.loc[df[0] == 1]
     selected_df[1] = pd.to_datetime(selected_df[1],unit='ms')
@@ -16,6 +17,7 @@ def graph_day_one():
     plt.show()
 
 def heatmap():
+    """Generates a heatmap for a given day, specified in the first line"""
     df = cdr.merge_countries("2013-12-11")
     df = df[df[1] == 1386788400000]
     df.columns =['CellID', 'Timestamp', 'SMSIN','SMSOUT','CALLIN','CALLOUT','INTERNET']
@@ -41,6 +43,10 @@ def heatmap():
     #fig.write_image("./images/fig1.png")
 
 def develop_image(timestamp:int):
+    """Develops a heatmap in image form for a given date and time
+    
+    Args
+    timestamp - unix timestamp for a given time"""
     dt = datetime.fromtimestamp(int(timestamp/1000)) + timedelta(hours = 1)
     df = cdr.merge_countries(dt.strftime('%Y-%m-%d'))
     df = df[df[1] == timestamp]
@@ -68,6 +74,11 @@ def develop_image(timestamp:int):
     fig.write_image("./images/"+dt.strftime('sms%Y-%m-%d-%H-%M')+".png")
 
 def develop_images(start:int, stop:int):
+    """Develops a heatmap in image form for all dates and times in a given range
+    
+    Args
+    start - unix timestamp for a given start time
+    stop - unix timestamp for a given stop time"""
     this = start
     while this <= stop:
         print(this)

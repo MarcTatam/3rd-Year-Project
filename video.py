@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import os
 
 def first_render():
+    """Renders the first video"""
     image1 = ImageClip("./images/sms2013-11-01-00-00.png")
     image2 = ImageClip("./images/sms2013-11-01-00-10.png")
     image3 = ImageClip("./images/sms2013-11-01-00-20.png")
@@ -17,6 +18,12 @@ def first_render():
     final.write_videofile("heatmap.mp4",fps=10)
 
 def render(start:int, stop:int):
+    """Renders a video in a given time range
+    Deprecated due to it creating poor video quality
+    
+    Args
+    start - unix timestamp for a given start time
+    stop - unix timestamp for a given stop time"""
     this = start
     while this <= stop:
         print(this)
@@ -35,6 +42,10 @@ def render(start:int, stop:int):
         this += 600000
 
 def render_day(date:str):
+    """Renders a video for a given date
+    
+    Args
+    date - date to render in string form"""
     start = 0
     images = []
     for hour in range(24):
@@ -50,6 +61,7 @@ def render_day(date:str):
     final.write_videofile("./videos/"+date+".mp4",fps=10)
 
 def render_all():
+    """Renders all videos"""
     for day in range(1,31):
         print(day)
         render_day("2013-11-"+str(day).zfill(2))
@@ -59,6 +71,7 @@ def render_all():
 
 
 def join_all():
+    """Joins all videos into a single video"""
     clips = []
     start = 0
     for day in range(1,31):
