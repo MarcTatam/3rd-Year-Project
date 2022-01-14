@@ -2,10 +2,11 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/.vs
-/__pycache__
-/project env
+/.vs/*
+/__pycache__/*
+/project env/*
 /keys.json
+/merged.csv
 /311213tweets.json
 /301213tweets.json
 /301113tweets.json
@@ -72,3 +73,4 @@
 /021113tweets.json
 /011113tweets.json
 /heatmap.mp4
+/010114tweets.json

@@ -62,6 +62,7 @@ def graph_word_usage(word:str):
             tweet_dict = json.load(f)
         tweets = tweet_dict["tweets"]
         for tweet in tweets:
+            tweet = tweet.lower()
             tweet_content = tweet["text"]
             tweet_split = tweet_content.split(" ")
             hour = int(tweet["created_at"][11:13])
@@ -86,16 +87,16 @@ def most_common_word()-> (str,int):
     String representing most common word and an integer for the number of times that word waas used"""
     word_dict = {}
     tweet_dict ={}
-    for i in range(1,32):
+    for i in range(1,31):
         print(i)
-        with open(str(i).zfill(2)+"1213tweets.json", "r") as f:
+        with open(str(i).zfill(2)+"1113tweets.json", "r") as f:
             tweet_dict = json.load(f)
         tweets = tweet_dict["tweets"]
         for tweet in tweets:
             tweet_content = tweet["text"]
             tweet_split = tweet_content.split(" ")
             for word in tweet_split:
-                word = ''.join(e for e in word if e.isalnum())
+                word = ''.join(e for e in word if e.isalnum()).lower()
                 if word[0:4] == "http" or len(word) == 1 or len(word) == 0:
                     pass
                 elif word in word_dict.keys():

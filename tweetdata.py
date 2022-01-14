@@ -15,9 +15,9 @@ def get_hourly_frequency(word:str)->[int]:
     List of ints for the usage of a word over each hour of the time period"""
     hours = []
     tweet_dict ={}
-    for i in range(1,32):
+    for i in range(1,31):
         day = [0]*24
-        with open(str(i).zfill(2)+"1213tweets.json", "r") as f:
+        with open(str(i).zfill(2)+"1113tweets.json", "r") as f:
             tweet_dict = json.load(f)
         tweets = tweet_dict["tweets"]
         for tweet in tweets:
@@ -38,8 +38,8 @@ def get_base():
     List of integers for the number of tweets"""
     hours = [0] *24
     tweet_dict ={}
-    for i in range(1,32):
-        with open(str(i).zfill(2)+"1213tweets.json", "r") as f:
+    for i in range(1,31):
+        with open(str(i).zfill(2)+"1113tweets.json", "r") as f:
             tweet_dict = json.load(f)
         tweets = tweet_dict["tweets"]
         for tweet in tweets:
@@ -69,6 +69,7 @@ if __name__ == "__main__":
     y = compare_day(day[0:24],baseline)
     x = range(744)
     for i in range(1,31):
+        print(i)
         y = y + compare_day(day[i*24:i*24+24],baseline)
     fig, ax = plt.subplots()
     ax.plot(x,y)

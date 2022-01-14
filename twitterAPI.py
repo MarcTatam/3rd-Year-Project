@@ -2,9 +2,9 @@ import requests
 import json
 import datetime as dt
 import time
-CIRCLE = "[9.189731 45.464157 8km]"
-START_DATE = "2013-11-01T00:00:00Z"
-END_DATE = "2013-11-30T23:59:59.000Z"
+CIRCLE = "[9.189731 45.464157 12km]"
+START_DATE = "2013-12-01T00:00:00Z"
+END_DATE = "2014-01-01T23:59:59.000Z"
 
 def get_tweets(max_results:int):
     with open("keys.json", "r") as f:
@@ -86,7 +86,7 @@ def load_tweets():
     return out
 if __name__ == "__main__":
     #with open("next.txt", "r") as f:
-        #next = f.read()
+    #    next = f.read()
     #print(next)
     #tweets = get_tweets(500)
     #handle_response(tweets)
