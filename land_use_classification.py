@@ -84,7 +84,7 @@ def attach_to_centroids(cells:[Cell],centroids:[Centroid])->[Centroid]:
             elif distance_to < distance:
                 nearest = i
                 distance = distance_to
-            centroids[nearest].add_cell(cell)
+        centroids[nearest].add_cell(cell)
     return centroids
 
 def position_centroids(centroids:[Centroid])->[Centroid]:
@@ -201,20 +201,19 @@ def format_data(weekday:pd.DataFrame, weekend: pd.DataFrame)->[Cell]:
     print(cells)
     return cells
 
+def prune_unwanted(df:pd.DataFrame)->pd.DataFrame:
+    pass
+
 if __name__ == "__main__":
-    #cell_list = [Cell(1)]
-    #cdr = open_data()
-    #cdr = remove_excess(cdr)
+    cdr = open_data()
+    print(cdr)
+    #cdr["7"] = cdr["7"]**(1/3)
+    #cdr = normalise(cdr, "7")
     #cdr = sort_daytype(cdr)
-    #cdr = cdr.groupby(["0","8","9"]).sum()
-    #cdr = cdr.reset_index()
-    #weekday = cdr.loc[cdr['8'] == 0]
-    #weekend = cdr.loc[cdr['8'] == 1]
-    #weekday = normalise(weekday, "7")
-    #weekend = normalise(weekend, "7")
-    #cells = format_data(weekday, weekend)
+    #cells = format_data(cdr[cdr["8"]==0], cdr[cdr["8"]==0])
     #save_cells(cells)
-    cells = load_cells()
-    centroids = k_means(1000,5, cells)
-    save_centroids(centroids)
+    #cells = load_cells()
+    #centroids = k_means(1000, 5, cells)
+    #save_centroids(centroids)
+    
 

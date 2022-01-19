@@ -43,4 +43,4 @@ def graph_weekend():
     plt.show()
 
 if __name__ == "__main__":
-    graph_weekend()
+    graph_weekday()
