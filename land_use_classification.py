@@ -1,5 +1,6 @@
 from datetime import datetime
 from random import random
+import numpy as np
 import pandas as pd
 import datetime as dt
 import open_cdr as ocdr
@@ -201,18 +202,56 @@ def format_data(weekday:pd.DataFrame, weekend: pd.DataFrame)->[Cell]:
     print(cells)
     return cells
 
+def format_data_pruned(weekday:pd.DataFrame, weekend: pd.DataFrame)->[Cell]:
+    cells = []
+    for i in range(1, 10001):
+        print(i)
+        if i >= 3100 and i <= 8400 and i % 100 >= 20 and i % 100 <= 80:
+            cell = Cell(i)
+            cell.weekday = weekday.loc[weekday["0"] == i]["7"].to_list()
+            cell.weekend = weekend.loc[weekend["0"] == i]["7"].to_list()
+            cells.append(cell)
+    print(cells)
+    return cells
+
 def prune_unwanted(df:pd.DataFrame)->pd.DataFrame:
-    pass
+    df = df[(df["0"] >= 3100) & (df["0"] <= 8400)]
+    df = df[(df["0"]%100 >= 20) & (df["0"]%100 <= 80)]
+    return df
+
+def normalise_cells(cells:[Cell])->[Cell]:
+    for cell in cells:
+        mean = np.mean(cell.weekday)
+        print(mean)
+        sd = np.std(cell.weekday)
+        for i in range(len(cell.weekday)):
+            cell.weekday[i] = (cell.weekday[i]-mean)/sd
+        mean = np.mean(cell.weekend)
+        sd = np.std(cell.weekend)
+        for i in range(len(cell.weekend)):
+            cell.weekend[i] = (cell.weekend[i]-mean)/sd
+    return cells
+
+def get_min_max(cells:[Cell])->(float,float):
+    minn = None
+    maxx = None
+    for cell in cells:
+        if minn == None:
+            minn = min(cell.weekend+cell.weekday)
+            maxx = max(cell.weekend+cell.weekday)
+        else:
+            minn = min(cell.weekend+cell.weekday+[minn])
+            maxx = max(cell.weekend+cell.weekday+[maxx])
+    return (minn,maxx)
 
 if __name__ == "__main__":
-    cdr = open_data()
-    print(cdr)
-    #cdr["7"] = cdr["7"]**(1/3)
-    #cdr = normalise(cdr, "7")
+    #cdr = open_data()
     #cdr = sort_daytype(cdr)
     #cells = format_data(cdr[cdr["8"]==0], cdr[cdr["8"]==0])
+    #cells = normalise_cells(cells)
     #save_cells(cells)
     #cells = load_cells()
+    #print(get_min_max(cells))
     #centroids = k_means(1000, 5, cells)
     #save_centroids(centroids)
     

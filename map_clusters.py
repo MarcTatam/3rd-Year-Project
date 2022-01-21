@@ -13,22 +13,23 @@ def map_clusters():
         centroid = centroids[i]
         for cell in centroid.cells:
             print(cell.id)
-            df_list.append([cell.id-1,str(i)])
-    df = pd.DataFrame(df_list, columns=("CellID", "CentroidID"))
+            df_list.append([cell.id-1,str(i+1)])
+    df = pd.DataFrame(df_list, columns=("CellID", "Centroid"))
     df.sort_values("CellID")
     print(df)
     with open("milano-grid.geojson") as f:
         gj = geojson.load(f)
-    fig= ex.choropleth_mapbox(
+    fig= ex.choropleth_mapbox(df,
                             geojson=gj,
                             locations=df.CellID,
-                            color=df.CentroidID,
+                            color="Centroid",
                             opacity = 0.5
                            )
     fig.update_layout(mapbox_style="stamen-terrain", mapbox_center_lon=9.19, mapbox_center_lat=45.4642,mapbox_zoom=10)
     fig.update_geos(fitbounds="locations")
     fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
-    fig.write_image("./first_attempt.png")
+    #fig.show()
+    fig.write_image("./third_attempt.png")
 
 if __name__ == "__main__":
     map_clusters()
