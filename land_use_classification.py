@@ -1,5 +1,5 @@
 from datetime import datetime
-from random import random
+from random import uniform
 import numpy as np
 import pandas as pd
 import datetime as dt
@@ -106,13 +106,14 @@ def position_centroids(centroids:[Centroid])->[Centroid]:
             centroids[i].weekday = sum_weekday
     return centroids
 
-def k_means(iterations : int, centroids: int, cells: [Cell]):
+def k_means(iterations : int, centroids: int, cells: [Cell], minn:float, maxx :float):
     centroid_list = []
     for i in range(centroids):
         this_centroid = Centroid()
         for j in range(24):
-            this_centroid.weekday[j] = random()
-            this_centroid.weekend[j] = random()
+            this_centroid.weekday[j] = uniform(minn, maxx)
+            print(this_centroid.weekday[j])
+            this_centroid.weekend[j] = uniform(minn, maxx)
         centroid_list.append(this_centroid)
     for i in range(iterations):
         print(i)
@@ -250,9 +251,9 @@ if __name__ == "__main__":
     #cells = format_data(cdr[cdr["8"]==0], cdr[cdr["8"]==0])
     #cells = normalise_cells(cells)
     #save_cells(cells)
-    #cells = load_cells()
-    #print(get_min_max(cells))
-    #centroids = k_means(1000, 5, cells)
-    #save_centroids(centroids)
+    cells = load_cells()
+    minn,maxx = get_min_max(cells)
+    centroids = k_means(1000, 5, cells, minn, maxx)
+    save_centroids(centroids)
     
 

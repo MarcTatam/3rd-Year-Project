@@ -29,7 +29,7 @@ def map_clusters():
     fig.update_geos(fitbounds="locations")
     fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
     #fig.show()
-    fig.write_image("./third_attempt.png")
+    fig.write_image("./fourth_attempt.png")
 
 if __name__ == "__main__":
     map_clusters()

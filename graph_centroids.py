@@ -59,4 +59,4 @@ def graph_weekend():
     #plt.show()
     plt.savefig('Weekend.png')
 if __name__ == "__main__":
-    graph_weekend()
+    graph_weekday()
