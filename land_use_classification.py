@@ -71,6 +71,14 @@ class Centroid:
         return {"weekend" : self.weekend, "weekday" : self.weekday}
 
 def attach_to_centroids(cells:[Cell],centroids:[Centroid])->[Centroid]:
+    """Assigns each cell to a centroid
+    
+    Args
+    cells - List of the cells
+    centroids - List of the centroids
+    
+    Returns
+    List of the centroids with the cells attached"""
     #Clear centroids of attachments
     for centroid in centroids:
         centroid.cells = []
@@ -89,6 +97,13 @@ def attach_to_centroids(cells:[Cell],centroids:[Centroid])->[Centroid]:
     return centroids
 
 def position_centroids(centroids:[Centroid])->[Centroid]:
+    """Positions the centroid within the cluster
+    
+    Args
+    centroids - list of centroids with the cells attached
+    
+    Returns
+    List of centroids postioned within the cell"""
     for i in range(len(centroids)):
         #First sum the positions of each cell
         sum_weekday = [0]*24
@@ -106,7 +121,18 @@ def position_centroids(centroids:[Centroid])->[Centroid]:
             centroids[i].weekday = sum_weekday
     return centroids
 
-def k_means(iterations : int, centroids: int, cells: [Cell], minn:float, maxx :float):
+def k_means(iterations : int, centroids: int, cells: [Cell], minn:float, maxx :float)->[Centroid]:
+    """Performs the K-means algorithm
+    
+    Args
+    iterations - Number of iterations to perform
+    centroids - Number of centroids to use
+    cells - List of cells to use
+    minn - Minimum value for the cells (used for centroid initilisation)
+    maxx - Maximum value for the cells (used for centroid initilisation)
+    
+    Returns
+    List of centroids"""
     centroid_list = []
     for i in range(centroids):
         this_centroid = Centroid()
@@ -121,6 +147,10 @@ def k_means(iterations : int, centroids: int, cells: [Cell], minn:float, maxx :f
 
 
 def save_cells(cell_list: [Cell]):
+    """Saves the cells to a JSON file
+    
+    Args
+    cell_list - list of cells to save"""
     cells = []
     for cell in cell_list:
         cells.append(cell.to_json())
@@ -128,6 +158,10 @@ def save_cells(cell_list: [Cell]):
         json.dump({"cells" : cells},f)
 
 def load_cells()->[Cell]:
+    """Loads the cells from a JSON file
+    
+    Returns
+    List of loaded cells"""
     with open("cells.json","r+") as f:
         json_cells = json.load(f)["cells"]
     cells = []
@@ -139,6 +173,10 @@ def load_cells()->[Cell]:
     return cells
 
 def save_centroids(centroids: [Centroid]):
+    """Saves the centroids to a JSON file
+    
+    Args
+    centroids - list of centroids to save"""
     centroid_list = []
     for centroid in centroids:
         centroid_list.append(centroid.to_json())
@@ -146,6 +184,10 @@ def save_centroids(centroids: [Centroid]):
         json.dump({"centroids" : centroid_list},f)
 
 def load_centroids()->[Centroid]:
+    """Loads the centroids from a JSON file
+    
+    Returns
+    List of loaded centroids"""
     with open("centroids.json","r+") as f:
         json_centroids = json.load(f)["centroids"]
     centroids = []
@@ -157,24 +199,40 @@ def load_centroids()->[Centroid]:
     return centroids
 
 def parse_data():
+    """Parses data from original csv files to a single hourly csv file"""
     data_list = []
     for cellid in range(1,10001):
         data_list.append(Cell(cellid))
     cdr = ocdr.merge_all()
-    #cdr = ocdr.merge_countries("2013-11-01")
     cdr[8] = (pd.to_datetime(cdr[1],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%w")
     cdr[9] = (pd.to_datetime(cdr[1],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%H")
     cdr = cdr.groupby([0,8,9]).sum()
     cdr.to_csv("merged.csv")
 
-def open_data():
+def open_data()->pd.DataFrame:
+    """Opens parsed data
+    
+    Returns
+    Dataframe of parsed data"""
     cdr = pd.read_csv("merged.csv")
     return cdr
 
 def remove_excess(cdr:pd.DataFrame)->pd.DataFrame:
+    """Removes unwanted columns (DEPRECATED)
+    
+    Args
+    cdr - untrimmed dataframe
+    
+    Returns
+    Trimmed dataframe with excess columns removed"""
     return cdr.drop('1', axis = 'columns')
 
 def sort_daytype(cdr:pd.DataFrame)->pd.DataFrame:
+    """Sorts the data into each day type.
+    1 represents weekends and 0 represents weekdays
+    
+    Args
+    cdr - data to sort into daytype"""
     def daytype(arg):
         if arg == 0 or arg == 6:
             return 1
@@ -183,13 +241,29 @@ def sort_daytype(cdr:pd.DataFrame)->pd.DataFrame:
     cdr["8"] = cdr["8"].apply(daytype)
     return cdr
 
-def normalise(df:pd.DataFrame, column:str)-> pd.DataFrame:
+def min_max_normalise(df:pd.DataFrame, column:str)-> pd.DataFrame:
+    """Normalises the data using min max normilisation
+    
+    Args
+    df - Dataframe to normalise
+    column - column to normalise
+    
+    Returns
+    Dataframe with desired column normalised"""
     minn = df[column].min()
     maxx = df[column].max()
     df[column] = (df[column]-minn)/(maxx-minn)
     return df
 
 def format_data(weekday:pd.DataFrame, weekend: pd.DataFrame)->[Cell]:
+    """Converts the data from Dataframes to sells
+    
+    Args
+    weekday - Dataframe containing all the weeday activities
+    weekend - Dataframe containing all the weekend activities
+    
+    Returns
+    List of cells"""
     cells = []
     for i in range(1, 10001):
         print(i)
@@ -201,6 +275,14 @@ def format_data(weekday:pd.DataFrame, weekend: pd.DataFrame)->[Cell]:
     return cells
 
 def format_data_pruned(weekday:pd.DataFrame, weekend: pd.DataFrame)->[Cell]:
+    """Formats Data if only looking at a subset of cells
+    
+    Args
+    weekday - Dataframe containing all the weeday activities
+    weekend - Dataframe containing all the weekend activities
+    
+    Returns
+    List of cells"""
     cells = []
     for i in range(1, 10001):
         print(i)
@@ -213,11 +295,24 @@ def format_data_pruned(weekday:pd.DataFrame, weekend: pd.DataFrame)->[Cell]:
     return cells
 
 def prune_unwanted(df:pd.DataFrame)->pd.DataFrame:
+    """Prunes data for when looking at a specific subset of cells
+    
+    Args
+    df - Dataframe to prune unwanted data
+    
+    Returns dataframe with subset of cells"""
     df = df[(df["0"] >= 3100) & (df["0"] <= 8400)]
     df = df[(df["0"]%100 >= 20) & (df["0"]%100 <= 80)]
     return df
 
-def normalise_cells(cells:[Cell])->[Cell]:
+def zscore_normalise(cells:[Cell])->[Cell]:
+    """Normalises cells using z score normilisation
+    
+    Args
+    cells - List of cells to be normalised
+    
+    Returns
+    List of cells with their data normalised"""
     for cell in cells:
         mean = np.mean(cell.weekday)
         print(mean)
@@ -231,6 +326,13 @@ def normalise_cells(cells:[Cell])->[Cell]:
     return cells
 
 def get_min_max(cells:[Cell])->(float,float):
+    """Gets minimum and maximum values
+    
+    Args
+    cells - list of cells to find the minimum and maximum values from
+    
+    Returns
+    Minimum and maximum values for the dataset"""
     minn = None
     maxx = None
     for cell in cells:
@@ -243,6 +345,13 @@ def get_min_max(cells:[Cell])->(float,float):
     return (minn,maxx)
 
 def convert_to_residual(cells:[Cell])->([Cell],[float],[float]):
+    """Converts the cells from normalised form to residual data
+    
+    Args
+    cells - list of cells to convert to normalised form
+    
+    Returns
+    Normalised cells, average weekday activity, average weekend activity"""
     weekend = [0]*24
     weekday = [0]*24
     for cell in cells:
