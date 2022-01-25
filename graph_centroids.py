@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from land_use_classification import load_centroids
+from land_use_classification import load_centroids, load_cells, convert_to_residual
 from math import log
 
 def graph_log_weekday():
@@ -14,20 +14,25 @@ def graph_log_weekday():
 
 def graph_weekday():
     centroids = load_centroids()
+    cells = load_cells()
+    cells, weekday, weekend = convert_to_residual(cells)
     x = []
     for i in range(24):
         x.append(i)
     fig, ax = plt.subplots()
     i = 1
     for centroid in centroids:
-        ax.plot(x,centroid.weekday, label=i)
-        i += 1
+        to_plot = []
+        for j in range(24):
+            to_plot.append(weekday[j] - centroid.weekday[j])
+        ax.plot(x,to_plot, label = i)
+        i+=1
     fig.legend(loc="upper right", title = "Centroid")
     ax.set_title("Weekday Activity")
     ax.set_ylabel("Activity")
     ax.set_xlabel("Hour of the Day")
     #plt.show()
-    plt.savefig('Weekday.png')
+    plt.savefig('Weekday2.png')
 
 def graph_log_weekend():
     centroids = load_centroids()
@@ -44,19 +49,24 @@ def graph_log_weekend():
 
 def graph_weekend():
     centroids = load_centroids()
+    cells = load_cells()
+    cells, weekday, weekend = convert_to_residual(cells)
     x = []
     for i in range(24):
         x.append(i)
     fig, ax = plt.subplots()
     i=1
     for centroid in centroids:
-        ax.plot(x,centroid.weekend, label = i)
+        to_plot = []
+        for j in range(24):
+            to_plot.append(weekend[j] - centroid.weekend[j])
+        ax.plot(x,to_plot, label = i)
         i+=1
     fig.legend(loc="upper right", title = "Centroid")
     ax.set_title("Weekend Activity")
     ax.set_ylabel("Activity")
     ax.set_xlabel("Hour of the Day")
     #plt.show()
-    plt.savefig('Weekend.png')
+    plt.savefig('Weekend2.png')
 if __name__ == "__main__":
     graph_weekday()
