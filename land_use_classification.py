@@ -112,12 +112,9 @@ def k_means(iterations : int, centroids: int, cells: [Cell], minn:float, maxx :f
         this_centroid = Centroid()
         for j in range(24):
             this_centroid.weekday[j] = uniform(minn, maxx)
-            print(this_centroid.weekday[j])
             this_centroid.weekend[j] = uniform(minn, maxx)
         centroid_list.append(this_centroid)
     for i in range(iterations):
-        print(i)
-        print(centroid_list)
         centroid_list = attach_to_centroids(cells, centroid_list)
         centroid_list = position_centroids(centroid_list)
     return centroid_list
@@ -245,6 +242,21 @@ def get_min_max(cells:[Cell])->(float,float):
             maxx = max(cell.weekend+cell.weekday+[maxx])
     return (minn,maxx)
 
+def convert_to_residual(cells:[Cell])->([Cell],[float],[float]):
+    weekend = [0]*24
+    weekday = [0]*24
+    for cell in cells:
+        for i in range(24):
+            weekend[i] += cell.weekend[i]
+            weekday[i] += cell.weekday[i]
+    weekday = list(map(lambda x: x/10000, weekday))
+    weekend = list(map(lambda x: x/10000, weekend))
+    for cell in cells:
+        for i in range(24):
+            cell.weekend[i] = cell.weekend[i] - weekend[i]
+            cell.weekday[i] = cell.weekday[i] - weekday[i]
+    return cells, weekday, weekend
+
 if __name__ == "__main__":
     #cdr = open_data()
     #cdr = sort_daytype(cdr)
@@ -252,6 +264,7 @@ if __name__ == "__main__":
     #cells = normalise_cells(cells)
     #save_cells(cells)
     cells = load_cells()
+    cells = convert_to_residual(cells)[0]
     minn,maxx = get_min_max(cells)
     centroids = k_means(1000, 5, cells, minn, maxx)
     save_centroids(centroids)

@@ -2,11 +2,12 @@ import plotly.graph_objects as go
 import plotly.express as ex
 import pandas as pd
 import geojson
-from land_use_classification import load_centroids, load_cells, attach_to_centroids
+from land_use_classification import load_centroids, load_cells, attach_to_centroids, convert_to_residual
 
 def map_clusters():
     centroids = load_centroids()
     cells = load_cells()
+    cells = convert_to_residual(cells)[0]
     centroids = attach_to_centroids(cells, centroids)
     df_list = []
     for i in range(len(centroids)):
@@ -29,7 +30,7 @@ def map_clusters():
     fig.update_geos(fitbounds="locations")
     fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
     #fig.show()
-    fig.write_image("./fourth_attempt.png")
+    fig.write_image("./fifth_attempt.png")
 
 if __name__ == "__main__":
     map_clusters()
