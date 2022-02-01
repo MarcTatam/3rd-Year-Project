@@ -3,6 +3,7 @@ from land_use_classification import load_centroids, load_cells, convert_to_resid
 from math import log
 
 def graph_log_weekday():
+    """Graphs the log activity of the cluster on a weekday using an hourly timescale"""
     centroids = load_centroids()
     x = []
     for i in range(24):
@@ -13,6 +14,7 @@ def graph_log_weekday():
     plt.show()
 
 def graph_weekday():
+    """Graphs the activity of the cluster on a weekday using an hourly timescale"""
     centroids = load_centroids()
     cells = load_cells()
     cells, weekday, weekend = convert_to_residual(cells)
@@ -35,6 +37,7 @@ def graph_weekday():
     plt.savefig('Weekday2.png')
 
 def graph_log_weekend():
+    """Graphs the log activity of the cluster on a weekend using an hourly timescale"""
     centroids = load_centroids()
     x = []
     for i in range(24):
@@ -48,6 +51,7 @@ def graph_log_weekend():
     plt.show()
 
 def graph_weekend():
+    """Graphs the activity of the cluster on a weekend using an hourly timescale"""
     centroids = load_centroids()
     cells = load_cells()
     cells, weekday, weekend = convert_to_residual(cells)
