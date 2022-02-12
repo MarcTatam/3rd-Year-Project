@@ -179,8 +179,8 @@ def normalise_word(word: Word):
 
 if __name__ == "__main__":
     #nltk.download("stopwords")
-    #search_word("stadio")
-    print(normalise_word(open_word("ac milan")))
+    search_word("arctic monkeys")
+    print(normalise_word(open_word("arctic monkeys")))
 
 
 

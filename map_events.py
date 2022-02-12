@@ -3,6 +3,7 @@ import pandas as pd
 import geojson as gj
 
 def map_events():
+    """Maps the events"""
     this_map = keplergl.KeplerGl()
     venues = pd.read_csv("Venues.csv")
     events = pd.read_csv("Events.csv")
@@ -123,6 +124,7 @@ def map_events():
     this_map.save_to_html(file_name="Events.html")
 
 def map_venues():
+    """Maps the venues"""
     this_map = keplergl.KeplerGl()
     venues = pd.read_csv("Venues.csv")
     venues[['Long','Lat']] = venues.Coords.str.split(", ",expand=True,)
