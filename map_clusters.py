@@ -23,7 +23,7 @@ def map_clusters():
     print(df)
     with open("milano-grid.geojson") as f:
         gj = json.load(f)
-    chars = ["A","B","C","D","E"]
+    chars = ["A","B","C","D","E","F","G","H","I","J","K","L",]
     for cell in gj["features"]:
         del cell["properties"]["cellId"]
         cell["properties"]["centroid"] = chars[int(df.loc[df["CellID"]==cell["id"]]["Centroid"])-1]

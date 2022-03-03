@@ -273,7 +273,7 @@ def similar_words(tweets:[dict], input_word:str)->dict:
     return out
 
 def extra_tweets(start_word:str)->int:
-    unwanted = nltk.corpus.stopwords.words("italian")+nltk.corpus.stopwords.words("english")+["I'm", "w/"]
+    unwanted = nltk.corpus.stopwords.words("italian")+nltk.corpus.stopwords.words("english")+["I'm", "w/","Milan","AC"]
     word_dict = {}
     tweets = containing_tweets(start_word)
     seen_ids = set()
@@ -318,8 +318,7 @@ def extra_tweets(start_word:str)->int:
 
 if __name__ == "__main__":
     #nltk.download("stopwords")
-    word = search_word_day("internazionale")
-    #print(word.distribution)
+    word = search_word_day("vs")
     word = normalise_word_day(word)
     base_pattern = residual_base()
     #word = open_word_day("#inter")
@@ -327,7 +326,7 @@ if __name__ == "__main__":
     save_word_day(word)
     #tweets = containing_tweets("internazionale")
     #print(similar_words(tweets, "internazionale"))
-    #print(extra_tweets("ac milan"))
+    #print(extra_tweets("internazionale"))
 
 
 

@@ -143,6 +143,7 @@ def k_means(iterations : int, centroids: int, cells: [Cell], minn:float, maxx :f
     for i in range(iterations):
         centroid_list = attach_to_centroids(cells, centroid_list)
         centroid_list = position_centroids(centroid_list)
+        print(i)
     return centroid_list
 
 
@@ -207,7 +208,8 @@ def parse_data():
     cdr[8] = (pd.to_datetime(cdr[1],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%w")
     cdr[9] = (pd.to_datetime(cdr[1],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%H")
     cdr = cdr.groupby([0,8,9]).sum()
-    cdr.to_csv("merged.csv")
+    print(cdr)
+    #cdr.to_csv("merged.csv")
 
 def open_data()->pd.DataFrame:
     """Opens parsed data
@@ -266,12 +268,10 @@ def format_data(weekday:pd.DataFrame, weekend: pd.DataFrame)->[Cell]:
     List of cells"""
     cells = []
     for i in range(1, 10001):
-        print(i)
         cell = Cell(i)
         cell.weekday = weekday.loc[weekday["0"] == i]["7"].to_list()
         cell.weekend = weekend.loc[weekend["0"] == i]["7"].to_list()
         cells.append(cell)
-    print(cells)
     return cells
 
 def format_data_pruned(weekday:pd.DataFrame, weekend: pd.DataFrame)->[Cell]:
@@ -291,7 +291,6 @@ def format_data_pruned(weekday:pd.DataFrame, weekend: pd.DataFrame)->[Cell]:
             cell.weekday = weekday.loc[weekday["0"] == i]["7"].to_list()
             cell.weekend = weekend.loc[weekend["0"] == i]["7"].to_list()
             cells.append(cell)
-    print(cells)
     return cells
 
 def prune_unwanted(df:pd.DataFrame)->pd.DataFrame:
@@ -367,11 +366,15 @@ def convert_to_residual(cells:[Cell])->([Cell],[float],[float]):
     return cells, weekday, weekend
 
 if __name__ == "__main__":
+    #parse_data()
     #cdr = open_data()
     #cdr = sort_daytype(cdr)
-    #cells = format_data(cdr[cdr["8"]==0], cdr[cdr["8"]==0])
-    #cells = normalise_cells(cells)
+    #cdr = cdr.groupby(["0","8","9"]).sum().reset_index()
+    #print(cdr)
+    #cells = format_data(cdr[cdr["8"]==0], cdr[cdr["8"]==1])
+    #cells = zscore_normalise(cells)
     #save_cells(cells)
+    #print(len(cells[0].weekend))
     cells = load_cells()
     cells = convert_to_residual(cells)[0]
     minn,maxx = get_min_max(cells)

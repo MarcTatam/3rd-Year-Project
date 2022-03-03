@@ -34,7 +34,7 @@ def graph_weekday():
     ax.set_ylabel("Activity")
     ax.set_xlabel("Hour of the Day")
     #plt.show()
-    plt.savefig('Weekday2.png')
+    plt.savefig('Weekday3.png')
 
 def graph_log_weekend():
     """Graphs the log activity of the cluster on a weekend using an hourly timescale"""
@@ -71,6 +71,6 @@ def graph_weekend():
     ax.set_ylabel("Activity")
     ax.set_xlabel("Hour of the Day")
     #plt.show()
-    plt.savefig('Weekend2.png')
+    plt.savefig('Weekend3.png')
 if __name__ == "__main__":
-    graph_weekday()
+    graph_weekend()

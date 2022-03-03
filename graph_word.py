@@ -152,9 +152,11 @@ def graph_alcatraz():
     plt.savefig("AlcatrazTweets.png")
 
 if __name__ == "__main__":
-    graph_word_day_me("internazionale", ["Inter vs Livorno", "Inter vs Sampdoria", "Inter vs Parma", "Inter vs Milan"])
+    #graph_word_day_me("internazionale", ["Inter vs Livorno", "Inter vs Sampdoria", "Inter vs Parma", "Inter vs Milan"])
+    #graph_word_day_me("ac milan", ["Inter vs Milan","Milan vs Genoa","Milan vs Fiorentina","Milan vs Roma", "Milan vs Ajax"])
     #graph_word_day_me("vs", ["Inter vs Livorno", "Inter vs Sampdoria", "Inter vs Parma", "Inter vs Milan","Milan vs Genoa","Milan vs Fiorentina","Milan vs Roma"])
     #graph_word_day_me("arctic monkeys", ["Arctic Monkeys"])
     #plot_related_time("internazionale",["Inter vs Livorno", "Inter vs Sampdoria", "Inter vs Parma", "Inter vs Milan"])
+    graph_word_day_me("vs", ["Inter vs Livorno", "Inter vs Sampdoria", "Inter vs Parma", "Inter vs Milan","Milan vs Genoa","Milan vs Fiorentina","Milan vs Roma","Milan vs Ajax", "Italy vs Germany"])
     #plot_related_frequency("internazionale")
     #graph_alcatraz()
