@@ -42,6 +42,7 @@ class fclayer(layer):
         Input - input to the layer"""
         self.input = input
         self.output = np.dot(input, self.weights) + self.bias
+        return self.output
 
     def back_propo(self, output_err, lr):
         """Calculates the partial derivative with respect to this layer
@@ -57,8 +58,8 @@ class fclayer(layer):
         weights_err = np.dot(self.input.T, output_err)
 
         #Update param
-        self.weights -= learning_rate * weights_err
-        self.bias -= learning_rate * output_err
+        self.weights -= lr * weights_err
+        self.bias -= lr * output_err
         return input_err
 
 class activation(layer):
@@ -81,7 +82,7 @@ class activation(layer):
         self.output = self.activation(self.input)
         return self.output
 
-    def back_propo(self, output_err):
+    def back_propo(self, output_err,lr):
         """Calculates the partial derivative with respect to this layer
         
         Args 
@@ -108,7 +109,7 @@ def mse_prime(actual, predicted):
     
     Returns
     Derivative of mean squared error"""
-    return 2*(actual-predicted)/actual.size
+    return 2*(predicted-actual)/actual.size
 
 class network:
     """Neural Network class"""
@@ -151,6 +152,7 @@ class network:
             for network_layer in self.layers:
                 output = network_layer.forward_propo(output)
             results.append(output)
+        return results
 
     def train(self, train_inputs, train_outputs, epochs, lr):
         """Trains the neural network
@@ -175,10 +177,10 @@ class network:
                 err += self.loss(train_outputs[j], output)
 
                 # backward propagation
-                error = self.loss_prime(y_train[j], output)
+                error = self.loss_prime(train_outputs[j], output)
                 for network_layer in reversed(self.layers):
-                    error = network_layer.backward_propo(error, learning_rate)
-            err /= samples
+                    error = network_layer.back_propo(error, lr)
+            err /= sample_count
             print('Epoch %d of %d   error=%f' % (i+1, epochs, err))
 if __name__ == "__main__":
     this_lay = fclayer()
