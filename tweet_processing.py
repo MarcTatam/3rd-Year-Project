@@ -1,4 +1,4 @@
-import nltk
+#import nltk
 import datetime
 import json
 import pickle

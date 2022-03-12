@@ -16,7 +16,7 @@ def xor():
     net.add(nn.fclayer(3,1))
     net.add(nn.activation(relu,relu_prime))
     net.loss_use(nn.mse,nn.mse_prime)
-    net.train(x_train, y_train, epochs=100000, lr=0.1)
+    net.train(x_train, y_train, epochs=1000, lr=0.1)
     out = net.predict(x_train)
     print(out)
 

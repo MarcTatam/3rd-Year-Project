@@ -26,12 +26,12 @@ def graph_cell(cell:int):
             return 1
         else:
             return 0
+    df = load_merged()
     centroids = load_centroids()
     cells = load_cells()
     cells, weekday, weekend = convert_to_residual(cells)
     centroids = attach_to_centroids(cells, centroids)
     wanted_centroid = get_centroid_ind(centroids, cell)
-    df = load_merged()
     df = df[df["0"] == cell]
     df["8"] = (pd.to_datetime(df["1"],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%w")
     df["10"] = (pd.to_datetime(df["1"],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%d")
@@ -103,4 +103,5 @@ def graph_cells(cell_ids:[int], events):
 
 
 if __name__ == "__main__":
-    graph_cells([2142,2143,2144,2042,2043,2044], ["Arctic Monkeys", "Max 20 Live Tour"])
+    save_merged()
+    #graph_cells([2142,2143,2144,2042,2043,2044], ["Arctic Monkeys", "Max 20 Live Tour"])
