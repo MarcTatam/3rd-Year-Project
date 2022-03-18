@@ -99,9 +99,9 @@ def graph_cells(cell_ids:[int], events):
     ax.set_title("Residual activity of the cells containing the Mediolanum Forum")
     ax.legend(loc="upper right",prop={'size': 6})
     #plt.show()
-    plt.savefig("Mediolanum Forum.png")
+    plt.savefig("network.png")
 
 
 if __name__ == "__main__":
-    save_merged()
-    #graph_cells([2142,2143,2144,2042,2043,2044], ["Arctic Monkeys", "Max 20 Live Tour"])
+    #save_merged()
+    graph_cells([497,498,499,500], [])

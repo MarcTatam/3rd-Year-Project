@@ -55,8 +55,7 @@ def merge_all()->pd.DataFrame:
     return df
 
 if __name__ == "__main__":
-    df = merge_all()
+    df = open_cdr("2013-12-26")
+    df = merge_countries("2013-12-16")
+    df = df[df[0] == 5238]
     print(df)
-    df[2] = df[3]+df[4]
-    print(df)
-    print(df[2].min())
