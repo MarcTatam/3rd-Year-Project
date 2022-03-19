@@ -1,3 +1,4 @@
+import fiona
 from land_use_classification import open_data, load_cells, load_centroids, convert_to_residual, attach_to_centroids
 from tweet_processing import residual_base
 from open_cdr import merge_countries
@@ -10,7 +11,8 @@ import neuralnetwork as nn
 import numpy as np
 import pandas as pd
 import datetime as dt
-import math
+import shapely
+import geopandas as gpd
 
 def relu(input):
     return np.maximum(input,0)
@@ -32,30 +34,40 @@ def sigmoid_prime(input):
 
 def load_nn_cells(datapoints:[(int,int,int)]):
     """ID, day, month"""
+    dates = set()
+    date_cell = {}
+    for datapoint in datapoints:
+        dates.add((datapoint[1],datapoint[2]))
+        if (datapoint[1],datapoint[2]) in date_cell.keys():
+            date_cell[(datapoint[1],datapoint[2])].append(datapoint[0])
+        else:
+            date_cell[(datapoint[1],datapoint[2])] = [datapoint[0]]
+    cdf = pd.read_csv("CensusDataZScore.csv")
     centroids = load_centroids()
     cells = load_cells()
     cells, weekday, weekend = convert_to_residual(cells)
     centroids = attach_to_centroids(cells, centroids)
     out = []
-    for datapoint in datapoints:
-        print(datapoint)
-        wanted_centroid = get_centroid_ind(centroids, datapoint[0])
-        df = merge_countries("2013-%s-%s" % (str(datapoint[2]).zfill(2), str(datapoint[1]).zfill(2)))
-        df = df[df[0]==datapoint[0]]
-        df[8] = df[8] = (pd.to_datetime(df[1],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%w")
-        df[9] = (pd.to_datetime(df[1],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%H")
-        day = df[8].iloc[0]
-        df = df.groupby([9]).sum().reset_index()
-        sd = df[7].std()
-        mean = df[7].mean()
-        df[7] = (df[7]-mean)/sd
-        temp_array = df[7].to_numpy()
-        for i in range(24):
-            if day == 0 or day == 6:
-                temp_array[i] -= centroids[wanted_centroid].weekend[i]
-            else:
-                temp_array[i] -= centroids[wanted_centroid].weekday[i]
-        out.append([temp_array])
+    for date in dates:
+        df = merge_countries("2013-%s-%s" % (str(date[1]).zfill(2), str(date[0]).zfill(2)))
+        for cell in date_cell[date]:
+            print([cell, date[0],date[1]])
+            wanted_centroid = get_centroid_ind(centroids, datapoint[0])
+            temp_df = df[df[0]==datapoint[0]]
+            temp_df[8] = temp_df[8] = (pd.to_datetime(temp_df[1],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%w")
+            temp_df[9] = (pd.to_datetime(temp_df[1],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%H")
+            day = temp_df[8].iloc[0]
+            temp_df = temp_df.groupby([9]).sum().reset_index()
+            sd = temp_df[7].std()
+            mean = temp_df[7].mean()
+            temp_df[7] = (temp_df[7]-mean)/sd
+            temp_array = temp_df[7].to_numpy()
+            for i in range(24):
+                if day == 0 or day == 6:
+                    temp_array[i] -= centroids[wanted_centroid].weekend[i]
+                else:
+                    temp_array[i] -= centroids[wanted_centroid].weekday[i]
+            out.append([temp_array])
     return np.array(out)
 
 def load_nn_tweets(words:[str], dates: [int]):
@@ -277,7 +289,6 @@ def graph_error():
     ax.set_ylabel("MSE Error")
     ax.set_xlabel("Number of Epochs")
     plt.show()
-        
 
 def save_events_cell(struct: dict):
     with open("cellevents.pkl","wb") as f:
@@ -298,14 +309,14 @@ def load_network_cell():
     return struct
 
 if __name__ == "__main__":
-    #net = cell_network()
+    net = cell_network()
     #net = save_network_cell(net)
     #struct = {}
     #for i in range(1,10001):
     #    struct[i] = []
     #save_events_cell(struct)
-    net = load_network_cell()
-    detect_events(net, 0)
+    #net = load_network_cell()
+    #detect_events(net, 0)
     #struct = load_events_cell()
     #print(struct)
     #graph_error()

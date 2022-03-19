@@ -1,5 +1,11 @@
+import fiona
+import shapely
 import keplergl
 import json
+import sys
+sys.path.append(r"C:\Users\Marc\source\repos\3rd-Year-Project\project env\Lib\site-packages")
+import geopandas
+
 
 def open_census_isat():
     with open("milano_istat.json","r") as f:
@@ -38,9 +44,13 @@ def open_census_isat():
 		}
 	}
 }
-    this_map.save_to_html(data=struct, 
+    this_map.save_to_html(data={"data_1":struct}, 
 	file_name='Census 1.html',config=this_map.config)
 
 
+
 if __name__ == "__main__":
-    open_census_isat()
+	with open("milano_istat.json","r") as f:
+		df = geopandas.read_file(f)
+	print(df.columns)
+	print(df[df.contains(shapely.geometry.Point(9.123932, 45.478733))])
