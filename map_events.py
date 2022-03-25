@@ -205,6 +205,63 @@ def map_nn_events():
 }
     this_map.save_to_html(file_name="NNevents.html")
 
+def map_nn_events_alternate():
+    events_json = {
+        "type": "FeatureCollection",
+        "features": []
+        }
+    with open("celleventssingle.pkl", "rb") as f:
+        cell_events = pickle.load(f)
+    cells = {}
+    with open("milano-grid.geojson", "r") as f:
+        for cell in json.load(f)["features"]:
+            cells[cell["properties"]["cellId"]] = [(cell["geometry"]["coordinates"][0][0][0]+cell["geometry"]["coordinates"][0][2][0])/2,(cell["geometry"]["coordinates"][0][0][1]+cell["geometry"]["coordinates"][0][2][1])/2]
+    for cell in cell_events.keys():
+        for i in range(len(cell_events[cell])):
+            point = {}
+            point["type"] = "Feature"
+            point["geometry"] = {
+                "type": "Point",
+                "coordinates": cells[cell]+[50*i]}
+            point["properties"] = {"CellID": cell,
+                                   "Day" : cell_events[cell][i]}
+            events_json["features"].append(point)
+    this_map = keplergl.KeplerGl()
+    this_map.add_data(events_json, "NN Detected Events")
+    this_map.config = {
+	'version': 'v1',
+	'config': {
+		'mapState': {
+			'bearing': 0,
+			'dragRotate': False,
+			'latitude': 45.455934682435,
+			'longitude': 9.23461965432608,
+			'pitch': 0,
+			'zoom': 10.451941083083048,
+			'isSplit': False
+		},
+		'mapStyle': {
+			'styleType': 'dark',
+			'topLayerGroups': {},
+			'visibleLayerGroups': {
+				'label': True,
+				'road': True,
+				'border': False,
+				'building': True,
+				'water': True,
+				'land': True,
+				'3d building': False
+			},
+			'threeDBuildingColor': [9.665468314072013,
+				17.18305478057247,
+				31.1442867897876
+			],
+			'mapStyles': {}
+		}
+	}
+}
+    this_map.save_to_html(file_name="NNeventsAlternate.html")
+
 
 if __name__ == "__main__":
-    map_nn_events()
+    map_nn_events_alternate()

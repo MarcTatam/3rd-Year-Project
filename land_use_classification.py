@@ -274,6 +274,45 @@ def format_data(weekday:pd.DataFrame, weekend: pd.DataFrame)->[Cell]:
         cells.append(cell)
     return cells
 
+
+def format_data_text(weekday:pd.DataFrame, weekend: pd.DataFrame)->[Cell]:
+    """Converts the data from Dataframes to sells
+    
+    Args
+    weekday - Dataframe containing all the weeday activities
+    weekend - Dataframe containing all the weekend activities
+    
+    Returns
+    List of cells"""
+    cells = []
+    weekday["7"] = weekday["3"] + weekday["4"]
+    weekend["7"] = weekend["3"] + weekend["4"]
+    for i in range(1, 10001):
+        cell = Cell(i)
+        cell.weekday = weekday.loc[weekday["0"] == i]["7"].to_list()
+        cell.weekend = weekend.loc[weekend["0"] == i]["7"].to_list()
+        cells.append(cell)
+    return cells
+
+def format_data_all(weekday:pd.DataFrame, weekend: pd.DataFrame)->[Cell]:
+    """Converts the data from Dataframes to sells
+    
+    Args
+    weekday - Dataframe containing all the weeday activities
+    weekend - Dataframe containing all the weekend activities
+    
+    Returns
+    List of cells"""
+    cells = []
+    weekday["7"] = weekday["3"] + weekday["4"] + weekday["5"] + weekday["6"]+ weekday["7"]
+    weekend["7"] = weekend["3"] + weekend["4"] + weekend["5"] + weekend["6"]+ weekend["7"]
+    for i in range(1, 10001):
+        cell = Cell(i)
+        cell.weekday = weekday.loc[weekday["0"] == i]["7"].to_list()
+        cell.weekend = weekend.loc[weekend["0"] == i]["7"].to_list()
+        cells.append(cell)
+    return cells
+
 def format_data_pruned(weekday:pd.DataFrame, weekend: pd.DataFrame)->[Cell]:
     """Formats Data if only looking at a subset of cells
     
@@ -365,20 +404,58 @@ def convert_to_residual(cells:[Cell])->([Cell],[float],[float]):
             cell.weekday[i] = cell.weekday[i] - weekday[i]
     return cells, weekday, weekend
 
+def centroids_daily_pattern():
+    """Gets the daily centroid zscore and saves them"""
+    def project_time(day, month):
+        if int(month) == 11:
+            return int(day)-1
+        else:
+            return int(day)+29
+    print("start")
+    cells = load_cells()
+    centroids = load_centroids()
+    centroids = attach_to_centroids(cells, centroids)
+    df = pd.read_csv("loose_merge.csv", index_col=0)
+    struct = {"centroids" : []}
+    for centroid in centroids:
+        centroid_distro = [0]*61
+        for cell in centroid.cells:
+            print(cell.id)
+            temp_df = df[df["0"]==cell.id]
+            temp_df["8"] = (pd.to_datetime(temp_df["1"],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%d")
+            temp_df["9"] = (pd.to_datetime(temp_df["1"],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%m")
+            temp_df = temp_df.groupby(["9","8"]).sum().reset_index()
+            temp_df["10"] = temp_df.apply(lambda x: project_time(x["8"],x["9"]),axis = 1)
+            value_list = temp_df["7"].tolist()
+            days_list = temp_df["10"].tolist()
+            for i in range(len(days_list)):
+                centroid_distro[days_list[i]] += value_list[i]
+        centroid_distro = np.array(centroid_distro)
+        std = centroid_distro.std()
+        mean = centroid_distro.mean()
+        centroid_distro = (centroid_distro - mean)/std
+        struct["centroids"].append({"pattern" : centroid_distro.tolist()})
+    with open("centroid_pattern.json","w+") as f:
+        json.dump(struct, f)
+
+
+            
+
 if __name__ == "__main__":
     #parse_data()
     #cdr = open_data()
     #cdr = sort_daytype(cdr)
     #cdr = cdr.groupby(["0","8","9"]).sum().reset_index()
     #print(cdr)
-    #cells = format_data(cdr[cdr["8"]==0], cdr[cdr["8"]==1])
+    #cells = format_data_all(cdr[cdr["8"]==0], cdr[cdr["8"]==1])
     #cells = zscore_normalise(cells)
     #save_cells(cells)
     #print(len(cells[0].weekend))
-    cells = load_cells()
-    cells = convert_to_residual(cells)[0]
-    minn,maxx = get_min_max(cells)
-    centroids = k_means(1000, 5, cells, minn, maxx)
-    save_centroids(centroids)
+    #cells = load_cells()
+    #cells = convert_to_residual(cells)[0]
+    #minn,maxx = get_min_max(cells)
+    #centroids = k_means(1000, 5, cells, minn, maxx)
+    #save_centroids(centroids)
+    centroids_daily_pattern()
     
 
