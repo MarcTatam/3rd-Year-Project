@@ -70,7 +70,7 @@ def graph_weekend():
     ax.set_title("Weekend Activity")
     ax.set_ylabel("Activity")
     ax.set_xlabel("Hour of the Day")
-    plt.show()
-    #plt.savefig('Weekend3.png')
+    #plt.show()
+    plt.savefig('Weekend3.png')
 if __name__ == "__main__":
-    graph_weekend()
+    graph_weekday()

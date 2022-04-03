@@ -318,7 +318,7 @@ def extra_tweets(start_word:str)->int:
 
 if __name__ == "__main__":
     #nltk.download("stopwords")
-    word = search_word_day("bob dylan")
+    word = search_word_day("pixies")
     word = normalise_word_day(word)
     base_pattern = residual_base()
     #word = open_word_day("#inter")

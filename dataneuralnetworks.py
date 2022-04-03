@@ -87,13 +87,14 @@ def load_nn_cells(datapoints:[(int,int,int)]):
         out.append(values_dict[datapoint])
     return np.array(out)
 
-def load_nn_cells_single(cell_list: [int]):
-    """ID, day, month"""
-    def project_time(day, month):
+def project_time(day, month):
         if int(month) == 11:
             return int(day)-1
         else:
             return int(day)+29
+
+def load_nn_cells_single(cell_list: [int]):
+    """ID, day, month"""
     dates = set()
     date_cell = {}
     df = pd.read_csv("loose_merge.csv", index_col = 0)
@@ -222,6 +223,87 @@ def load_nn_tweets(words:[str], dates: [int]):
     #print(out)
     return np.array(out)
 
+def load_nn_combined(datapoints:[(int, int, int)], words: [str]):
+    dates = set()
+    date_cell = {}
+    for datapoint in datapoints:
+        dates.add((datapoint[1],datapoint[2]))
+        if (datapoint[1],datapoint[2]) in date_cell.keys():
+            date_cell[(datapoint[1],datapoint[2])].append(datapoint[0])
+        else:
+            date_cell[(datapoint[1],datapoint[2])] = [datapoint[0]]
+    cdf = pd.read_csv("CensusDataZScore.csv", index_col = 0)
+    centroids = load_centroids()
+    cells = load_cells()
+    cells, weekday, weekend = convert_to_residual(cells)
+    centroids = attach_to_centroids(cells, centroids)
+    values_dict = {}
+    distro = []
+    base = residual_base()
+    for i in words:
+        distro.append([])
+    for i in range(61):
+        print(i)
+        temp = []
+        for j in range(len(words)):
+            temp.append(0)
+        if i < 30:
+            with open(str(i + 1).zfill(2)+"1113tweets.json","r") as f:
+                tweets = tweets = json.load(f)["tweets"]
+                for tweet in tweets:
+                    for j in range(len(words)):
+                        temp[j] += tweet["text"].lower().count(words[j])
+        else:
+            with open(str(i-29).zfill(2)+"1213tweets.json","r") as f:
+                tweets = tweets = json.load(f)["tweets"]
+                for tweet in tweets:
+                    for j in range(len(words)):
+                        temp[j] += tweet["text"].lower().count(words[j])
+        for j in range(len(words)):
+            distro[j].append(temp[j])
+    for i in range(len(words)):
+        mean = sum(distro[i])/61
+        temp_tot = 0
+        for j in range(61):
+            temp_tot = (distro[i][j]-mean)**2
+        sd = np.sqrt(temp_tot/61)
+        for j in range(61):
+            distro[i][j] = (distro[i][j]-mean)/sd - base[j]
+    for date in dates:
+        df = merge_countries("2013-%s-%s" % (str(date[1]).zfill(2), str(date[0]).zfill(2)))
+        epoch_date = 0
+        if date[1] == 12:
+            epoch_Date = date[0] + 29
+        else:
+            epoch_date = date[0] - 1
+        word_distro = []
+        for i in range(len(words)):
+            word_distro.append(distro[i][epoch_date])
+        for cell in date_cell[date]:
+            print([cell, date[0],date[1]])
+            wanted_centroid = get_centroid_ind(centroids, datapoint[0])
+            temp_df = df[df[0]==datapoint[0]]
+            temp_df[8] = temp_df[8] = (pd.to_datetime(temp_df[1],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%w")
+            temp_df[9] = (pd.to_datetime(temp_df[1],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%H")
+            day = temp_df[8].iloc[0]
+            temp_df = temp_df.groupby([9]).sum().reset_index()
+            sd = temp_df[7].std()
+            mean = temp_df[7].mean()
+            temp_df[7] = (temp_df[7]-mean)/sd
+            temp_array = temp_df[7].to_numpy()
+            for i in range(24):
+                if day == 0 or day == 6:
+                    temp_array[i] -= centroids[wanted_centroid].weekend[i] - weekend[i]
+                else:
+                    temp_array[i] -= centroids[wanted_centroid].weekday[i] - weekday[i]
+            temp_cdf = cdf[cdf["CellID"] == cell]
+            temp_array = np.concatenate([temp_array,np.array([temp_cdf.iloc[0]["P1"],temp_cdf.iloc[0]["E3"],temp_cdf.iloc[0]["E4"]]), np.array(word_distro)])
+            values_dict[(cell, date[0], date[1])] = [temp_array]
+    out = []
+    for datapoint in datapoints:
+        out.append(values_dict[datapoint])
+    return np.array(out)
+   
 
 def cell_network():
     net = nn.network()
@@ -299,20 +381,21 @@ def cell_network_san_siro_only():
         print("Actual : " + str(actual[i]) + " , Predicted : " + str(predicted[i][0]))
     return net
 
-def tweet_network():
-    words = load_nn_tweets(["inter","parma","sampdoria","livorno","ajax","roma","fiorentina","genoa","arctic monkeys", "pixies", "skrillex","bastille", "bring me the horizon"],[1,8,22,30,37,51,45,41,2,3,50,55,56,57])
-    actuals = np.array([[[1]],[[1]],[[1]],[[1]],[[1]],[[1]],[[1]],[[1]],[[1]],[[1]],[[0]],[[0]],[[0]],[[0]]])
+def tweet_network(word_list):
+    words = load_nn_tweets(word_list,[8,22,30,37,51,41,2,3,50,55,56,57,5,6,32,12,45])
+    actuals = np.array([[[1]],[[1]],[[1]],[[1]],[[1]],[[0]],[[0]],[[0]],[[0]],[[0]],[[0]],[[0]],[[0]],[[0]],[[0]],[[0]],[[1]]])
     net = nn.network()
-    net.add(nn.fclayer(13,5))
+    net.add(nn.fclayer(len(word_list),int(2*len(word_list)/3)))
     net.add(nn.activation(sigmoid,sigmoid_prime))
-    net.add(nn.fclayer(5,3))
+    net.add(nn.fclayer(int(2*len(word_list)/3),3))
     net.add(nn.activation(sigmoid, sigmoid_prime))
     net.add(nn.fclayer(3,1))
     net.add(nn.activation(sigmoid, sigmoid_prime))
     net.loss_use(nn.mse,nn.mse_prime)
     net.train(words,actuals,1000,0.1)
-    test = load_nn_tweets(["inter","parma","sampdoria","livorno","ajax","roma","fiorentina","genoa","arctic monkeys", "pixies", "skrillex","bastille", "bring me the horizon"],[4,5,6,7,9,10,11,12,13,14,15,16,17,18,19,20,21,53,54])
-    test_actual = [[[0]]]*19
+    test = load_nn_tweets(word_list,[1,5,6,7,9,10,11,13,14,15,16,17,18,19,20,21,53,54])
+    test_actual = [[[1]]]
+    test_actual += [[[0]]]*17
     predict = net.predict(test)
     for i in range(len(test_actual)):
         print("Actual : " + str(test_actual[i]) + " , Predicted : " + str(predict[i][0]))
@@ -402,19 +485,19 @@ def detect_events(network: nn.network, start_date : int):
                 for k in range(24):
                     if str(k).zfill(2) in hours:
                         if day == 0 or day == 6:
-                            temp_array[k] -= centroids[centroid_id[j]].weekend[k]
+                            temp_array[k] -= centroids[centroid_id[j]].weekend[k]-weekend[k]
                         else:
-                            temp_array[k] -= centroids[centroid_id[j]].weekday[k]
+                            temp_array[k] -= centroids[centroid_id[j]].weekday[k]-weekday[k]
                     elif k >= len(temp_array):
                         if day == 0 or day == 6:
-                            temp_array = np.append(temp_array, [- centroids[centroid_id[j]].weekend[k]])
+                            temp_array = np.append(temp_array, [- centroids[centroid_id[j]].weekend[k]-weekend[k]])
                         else:
-                            temp_array = np.append(temp_array, [- centroids[centroid_id[j]].weekday[k]])
+                            temp_array = np.append(temp_array, [- centroids[centroid_id[j]].weekday[k]-weekday[k]])
                     else:
                         if day == 0 or day == 6:
-                             temp_array = np.insert(temp_array,k, [- centroids[centroid_id[j]].weekend[k]])
+                             temp_array = np.insert(temp_array,k, [- centroids[centroid_id[j]].weekend[k]-weekend[k]])
                         else:
-                             temp_array = np.insert(temp_array,k, [- centroids[centroid_id[j]].weekday[k]])
+                             temp_array = np.insert(temp_array,k, [- centroids[centroid_id[j]].weekday[k]-weekday[k]])
                 temp_cdf = cdf[cdf["CellID"] == j]
                 temp_array = np.concatenate([temp_array,np.array([temp_cdf.iloc[0]["P1"],temp_cdf.iloc[0]["E3"],temp_cdf.iloc[0]["E4"]])])
                 prediction = network.predict(np.array([[temp_array]]))
@@ -441,19 +524,19 @@ def detect_events(network: nn.network, start_date : int):
                 for k in range(24):
                     if str(k).zfill(2) in hours:
                         if day == 0 or day == 6:
-                            temp_array[k] -= centroids[centroid_id[j]].weekend[k]
+                            temp_array[k] -= centroids[centroid_id[j]].weekend[k]-weekend[k]
                         else:
-                            temp_array[k] -= centroids[centroid_id[j]].weekday[k]
+                            temp_array[k] -= centroids[centroid_id[j]].weekday[k]-weekday[k]
                     elif k >= len(temp_array):
                         if day == 0 or day == 6:
-                            temp_array = np.append(temp_array, [- centroids[centroid_id[j]].weekend[k]])
+                            temp_array = np.append(temp_array, [- centroids[centroid_id[j]].weekend[k]-weekend[k]])
                         else:
-                            temp_array = np.append(temp_array, [- centroids[centroid_id[j]].weekday[k]])
+                            temp_array = np.append(temp_array, [- centroids[centroid_id[j]].weekday[k]-weekday[k]])
                     else:
                         if day == 0 or day == 6:
-                             temp_array = np.insert(temp_array,k, [- centroids[centroid_id[j]].weekend[k]])
+                             temp_array = np.insert(temp_array,k, [- centroids[centroid_id[j]].weekend[k]-weekend[k]])
                         else:
-                             temp_array = np.insert(temp_array,k, [- centroids[centroid_id[j]].weekday[k]])
+                             temp_array = np.insert(temp_array,k, [- centroids[centroid_id[j]].weekday[k]-weekday[k]])
                 temp_cdf = cdf[cdf["CellID"] == j]
                 temp_array = np.concatenate([temp_array,np.array([temp_cdf.iloc[0]["P1"],temp_cdf.iloc[0]["E3"],temp_cdf.iloc[0]["E4"]])])
                 prediction = network.predict(np.array([[temp_array]]))
@@ -534,19 +617,320 @@ def evaluate_cell_net(net):
     with open("celleventssingle.pkl", "wb") as f:
         struct = pickle.dump(struct,f)
 
-            
+def combined_net(word_list):
+    net = nn.network()
+    net.add(nn.fclayer(40,24))
+    net.add(nn.activation(sigmoid, sigmoid_prime))
+    net.add(nn.fclayer(24,3))
+    net.add(nn.activation(sigmoid, sigmoid_prime))
+    net.add(nn.fclayer(3,1))
+    net.add(nn.activation(sigmoid, sigmoid_prime))
+    net.loss_use(nn.mse,nn.mse_prime)
+    event_days = [(5638,15,11),(5638,9,11),(5638,1,12),(5638,8,12),(5638,22,12),(5638,23,11),(5638,2,11),(5638,16,12),(5638,11,12)]
+    expected = [[1],[1],[1],[1],[1],[1],[1],[1],[1]]
+    train_data = event_days
+    test_data = []
+    actual = []
+    for i in range(1,31):
+        test_data.append((5738,i,11))
+        if not (5638, i, 11) in event_days:
+            train_data += [(5638, i, 11)]
+            expected += [[0]]
+            actual += [[0]]
+        else:
+            actual += [[1]]
+    for i in range(1,32):
+        test_data.append((5738,i,12))
+        if not (5638, i, 12) in event_days:
+            train_data += [(5638, i, 12)]
+            expected += [[0]]
+            actual += [[0]]
+        else:
+            actual += [[1]]
+    expected = np.array(expected)
+    train_data = load_nn_combined(train_data,word_list)
+    net.train(train_data,expected,10000,0.1)
+    test_data = load_nn_combined(test_data,word_list)
+    predicted = net.predict(test_data)
+    for i in range(len(actual)):
+        print("Actual : " + str(actual[i]) + " , Predicted : " + str(predicted[i][0]))
+    return net
+
+def detect_events_combined(network: nn.network, start_date : int, word_list):
+    cdf = pd.read_csv("CensusDataZScore.csv", index_col = 0)
+    centroids = load_centroids()
+    cells = load_cells()
+    cells, weekday, weekend = convert_to_residual(cells)
+    centroids = attach_to_centroids(cells, centroids)
+    events = load_events_combined()
+    centroid_id = {}
+    for i in range(len(centroids)):
+        for cell in centroids[i].cells:
+            centroid_id[cell.id] = i
+    distro = []
+    base = residual_base()
+    for i in word_list:
+        distro.append([])
+    for i in range(61):
+        print(i)
+        temp = []
+        for j in range(len(word_list)):
+            temp.append(0)
+        if i < 30:
+            with open(str(i + 1).zfill(2)+"1113tweets.json","r") as f:
+                tweets = tweets = json.load(f)["tweets"]
+                for tweet in tweets:
+                    for j in range(len(word_list)):
+                        temp[j] += tweet["text"].lower().count(word_list[j])
+        else:
+            with open(str(i-29).zfill(2)+"1213tweets.json","r") as f:
+                tweets = tweets = json.load(f)["tweets"]
+                for tweet in tweets:
+                    for j in range(len(word_list)):
+                        temp[j] += tweet["text"].lower().count(word_list[j])
+        for j in range(len(word_list)):
+            distro[j].append(temp[j])
+    for i in range(start_date, 61):
+        if i < 30:
+            df = merge_countries("2013-%s-%s" % ("11", str(i+1).zfill(2)))
+            words = []
+            for k in range(len(word_list)):
+                words.append(distro[k][i])
+            for j in range(1, 10001):
+                temp_df = df[df[0]==j]
+                if not temp_df.empty:
+                    temp_df[8] = (pd.to_datetime(temp_df[1],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%w")
+                    temp_df[9] = (pd.to_datetime(temp_df[1],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%H")
+                    day = temp_df[8].iloc[0]
+                    temp_df = temp_df.groupby([9]).sum().reset_index()
+                    sd = temp_df[7].std()
+                    mean = temp_df[7].mean()
+                    temp_df[7] = (temp_df[7]-mean)/sd
+                    temp_array = temp_df[7].to_numpy()
+                    hours = temp_df[9].to_numpy()
+                else:
+                    hours = np.array([])
+                    temp_array = hours = np.array([])
+                for k in range(24):
+                    if str(k).zfill(2) in hours:
+                        if day == 0 or day == 6:
+                            temp_array[k] -= centroids[centroid_id[j]].weekend[k]-weekend[k]
+                        else:
+                            temp_array[k] -= centroids[centroid_id[j]].weekday[k]-weekday[k]
+                    elif k >= len(temp_array):
+                        if day == 0 or day == 6:
+                            temp_array = np.append(temp_array, [- centroids[centroid_id[j]].weekend[k]-weekend[k]])
+                        else:
+                            temp_array = np.append(temp_array, [- centroids[centroid_id[j]].weekday[k]-weekday[k]])
+                    else:
+                        if day == 0 or day == 6:
+                             temp_array = np.insert(temp_array,k, [- centroids[centroid_id[j]].weekend[k]-weekend[k]])
+                        else:
+                             temp_array = np.insert(temp_array,k, [- centroids[centroid_id[j]].weekday[k]-weekday[k]])
+                temp_cdf = cdf[cdf["CellID"] == j]
+                temp_array = np.concatenate([temp_array,np.array([temp_cdf.iloc[0]["P1"],temp_cdf.iloc[0]["E3"],temp_cdf.iloc[0]["E4"]]),np.array(words)])
+                prediction = network.predict(np.array([[temp_array]]))
+                if prediction[0][0] > 0.5:
+                    events[j].append(i)
+        else:
+            df = merge_countries("2013-%s-%s" % ("12", str(i-29).zfill(2)))
+            words = []
+            for k in range(len(word_list)):
+                words.append(distro[k][i])
+            for j in range(1, 10001):
+                temp_df = df[df[0]==j]
+                if not temp_df.empty:
+                    temp_df[8] = (pd.to_datetime(temp_df[1],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%w")
+                    temp_df[9] = (pd.to_datetime(temp_df[1],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%H")
+                    day = temp_df[8].iloc[0]
+                    temp_df = temp_df.groupby([9]).sum().reset_index()
+                    sd = temp_df[7].std()
+                    mean = temp_df[7].mean()
+                    temp_df[7] = (temp_df[7]-mean)/sd
+                    temp_array = temp_df[7].to_numpy()
+                    hours = temp_df[9].to_numpy()
+                else:
+                    hours = np.array([])
+                    temp_array = hours = np.array([])
+                for k in range(24):
+                    if str(k).zfill(2) in hours:
+                        if day == 0 or day == 6:
+                            temp_array[k] -= centroids[centroid_id[j]].weekend[k]-weekend[k]
+                        else:
+                            temp_array[k] -= centroids[centroid_id[j]].weekday[k]-weekday[k]
+                    elif k >= len(temp_array):
+                        if day == 0 or day == 6:
+                            temp_array = np.append(temp_array, [- centroids[centroid_id[j]].weekend[k]-weekend[k]])
+                        else:
+                            temp_array = np.append(temp_array, [- centroids[centroid_id[j]].weekday[k]-weekday[k]])
+                    else:
+                        if day == 0 or day == 6:
+                             temp_array = np.insert(temp_array,k, [- centroids[centroid_id[j]].weekend[k]-weekend[k]])
+                        else:
+                             temp_array = np.insert(temp_array,k, [- centroids[centroid_id[j]].weekday[k]-weekday[k]])
+                temp_cdf = cdf[cdf["CellID"] == j]
+                temp_array = np.concatenate([temp_array,np.array([temp_cdf.iloc[0]["P1"],temp_cdf.iloc[0]["E3"],temp_cdf.iloc[0]["E4"]]),np.array(words)])
+                prediction = network.predict(np.array([[temp_array]]))
+                if prediction[0][0] > 0.5:
+                    events[j].append(i)
+        save_events_combined(events)
+        print(i)
+
+def detect_events_double(cell_network: nn.network, tweet_net: nn.network, start_date : int, word_list: [str]):
+    cdf = pd.read_csv("CensusDataZScore.csv", index_col = 0)
+    centroids = load_centroids()
+    cells = load_cells()
+    cells, weekday, weekend = convert_to_residual(cells)
+    centroids = attach_to_centroids(cells, centroids)
+    events = load_events_double()
+    centroid_id = {}
+    for i in range(len(centroids)):
+        for cell in centroids[i].cells:
+            centroid_id[cell.id] = i
+    distro = []
+    base = residual_base()
+    for i in word_list:
+        distro.append([])
+    for i in range(61):
+        print(i)
+        temp = []
+        for j in range(len(word_list)):
+            temp.append(0)
+        if i < 30:
+            with open(str(i + 1).zfill(2)+"1113tweets.json","r") as f:
+                tweets = tweets = json.load(f)["tweets"]
+                for tweet in tweets:
+                    for j in range(len(word_list)):
+                        temp[j] += tweet["text"].lower().count(word_list[j])
+        else:
+            with open(str(i-29).zfill(2)+"1213tweets.json","r") as f:
+                tweets = tweets = json.load(f)["tweets"]
+                for tweet in tweets:
+                    for j in range(len(word_list)):
+                        temp[j] += tweet["text"].lower().count(word_list[j])
+        for j in range(len(word_list)):
+            distro[j].append(temp[j])
+    for i in range(start_date, 61):
+        if i < 30:
+            df = merge_countries("2013-%s-%s" % ("11", str(i+1).zfill(2)))
+            words = []
+            for k in range(len(word_list)):
+                words.append(distro[k][i])
+            tweet_prediction = tweet_net.predict(np.array([[words]]))
+            for j in range(1, 10001):
+                temp_df = df[df[0]==j]
+                if not temp_df.empty:
+                    temp_df[8] = (pd.to_datetime(temp_df[1],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%w")
+                    temp_df[9] = (pd.to_datetime(temp_df[1],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%H")
+                    day = temp_df[8].iloc[0]
+                    temp_df = temp_df.groupby([9]).sum().reset_index()
+                    sd = temp_df[7].std()
+                    mean = temp_df[7].mean()
+                    temp_df[7] = (temp_df[7]-mean)/sd
+                    temp_array = temp_df[7].to_numpy()
+                    hours = temp_df[9].to_numpy()
+                else:
+                    hours = np.array([])
+                    temp_array = hours = np.array([])
+                for k in range(24):
+                    if str(k).zfill(2) in hours:
+                        if day == 0 or day == 6:
+                            temp_array[k] -= centroids[centroid_id[j]].weekend[k]-weekend[k]
+                        else:
+                            temp_array[k] -= centroids[centroid_id[j]].weekday[k]-weekday[k]
+                    elif k >= len(temp_array):
+                        if day == 0 or day == 6:
+                            temp_array = np.append(temp_array, [- centroids[centroid_id[j]].weekend[k]-weekend[k]])
+                        else:
+                            temp_array = np.append(temp_array, [- centroids[centroid_id[j]].weekday[k]-weekday[k]])
+                    else:
+                        if day == 0 or day == 6:
+                             temp_array = np.insert(temp_array,k, [- centroids[centroid_id[j]].weekend[k]-weekend[k]])
+                        else:
+                             temp_array = np.insert(temp_array,k, [- centroids[centroid_id[j]].weekday[k]-weekday[k]])
+                temp_cdf = cdf[cdf["CellID"] == j]
+                temp_array = np.concatenate([temp_array,np.array([temp_cdf.iloc[0]["P1"],temp_cdf.iloc[0]["E3"],temp_cdf.iloc[0]["E4"]])])
+                cell_prediction = cell_network.predict(np.array([[temp_array]]))
+                if cell_prediction[0][0] > 0.5 and tweet_prediction[0][0] > 0.5:
+                    events[j].append(i)
+        else:
+            df = merge_countries("2013-%s-%s" % ("12", str(i-29).zfill(2)))
+            words = []
+            for k in range(len(word_list)):
+                words.append(distro[k][i])
+            tweet_prediction = tweet_net.predict(np.array([[words]]))
+            for j in range(1, 10001):
+                temp_df = df[df[0]==j]
+                if not temp_df.empty:
+                    temp_df[8] = (pd.to_datetime(temp_df[1],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%w")
+                    temp_df[9] = (pd.to_datetime(temp_df[1],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%H")
+                    day = temp_df[8].iloc[0]
+                    temp_df = temp_df.groupby([9]).sum().reset_index()
+                    sd = temp_df[7].std()
+                    mean = temp_df[7].mean()
+                    temp_df[7] = (temp_df[7]-mean)/sd
+                    temp_array = temp_df[7].to_numpy()
+                    hours = temp_df[9].to_numpy()
+                else:
+                    hours = np.array([])
+                    temp_array = hours = np.array([])
+                for k in range(24):
+                    if str(k).zfill(2) in hours:
+                        if day == 0 or day == 6:
+                            temp_array[k] -= centroids[centroid_id[j]].weekend[k]-weekend[k]
+                        else:
+                            temp_array[k] -= centroids[centroid_id[j]].weekday[k]-weekday[k]
+                    elif k >= len(temp_array):
+                        if day == 0 or day == 6:
+                            temp_array = np.append(temp_array, [- centroids[centroid_id[j]].weekend[k]-weekend[k]])
+                        else:
+                            temp_array = np.append(temp_array, [- centroids[centroid_id[j]].weekday[k]-weekday[k]])
+                    else:
+                        if day == 0 or day == 6:
+                             temp_array = np.insert(temp_array,k, [- centroids[centroid_id[j]].weekend[k]-weekend[k]])
+                        else:
+                             temp_array = np.insert(temp_array,k, [- centroids[centroid_id[j]].weekday[k]-weekday[k]])
+                temp_cdf = cdf[cdf["CellID"] == j]
+                temp_array = np.concatenate([temp_array,np.array([temp_cdf.iloc[0]["P1"],temp_cdf.iloc[0]["E3"],temp_cdf.iloc[0]["E4"]])])
+                cell_prediction = cell_network.predict(np.array([[temp_array]]))
+                if cell_prediction[0][0] > 0.5 and tweet_prediction[0][0] > 0.5:
+                    events[j].append(i)
+        save_events_double(events)
+        print(i)
 
 def save_events_cell(struct: dict):
     with open("cellevents.pkl","wb") as f:
+        pickle.dump(struct, f)
+
+def save_events_combined(struct: dict):
+    with open("combinedevents.pkl","wb") as f:
+        pickle.dump(struct, f)
+
+def save_events_double(struct: dict):
+    with open("doubleevents.pkl","wb") as f:
         pickle.dump(struct, f)
 
 def load_events_cell():
     with open("cellevents.pkl", "rb") as f:
         struct = pickle.load(f)
     return struct
+
+def load_events_combined():
+    with open("combinedevents.pkl", "rb") as f:
+        struct = pickle.load(f)
+    return struct
+
+def load_events_double():
+    with open("doubleevents.pkl", "rb") as f:
+        struct = pickle.load(f)
+    return struct
         
 def save_network_cell(struct: nn.network):
     with open("cellnetwork.pkl","wb") as f:
+        pickle.dump(struct, f)
+
+def save_network_combined(struct: nn.network):
+    with open("combinednetwork.pkl","wb") as f:
         pickle.dump(struct, f)
 
 def save_network_cell_single(struct: nn.network):
@@ -558,25 +942,49 @@ def load_network_cell():
         struct = pickle.load(f)
     return struct
 
+def load_network_combined():
+    with open("combinednetwork.pkl", "rb") as f:
+        struct = pickle.load(f)
+    return struct
+
 def load_network_cell_single():
     with open("cellnetworksingle.pkl", "rb") as f:
         struct = pickle.load(f)
     return struct
 
+def save_network_tweet(struct: nn.network):
+    with open("tweetnetwork.pkl","wb") as f:
+        pickle.dump(struct, f)
+
+def load_network_tweet():
+    with open("tweetnetwork.pkl", "rb") as f:
+        struct = pickle.load(f)
+    return struct
+
 if __name__ == "__main__":
     print("start")
-    #net = cell_network_single()
-    #save_network_cell_single(net)
-    net = load_network_cell_single()
+    #net = cell_network()
+    #save_network_cell(net)
+    #net = load_network_cell_single()
     #net = cell_network_san_siro_only()
     #net = save_network_cell(net)
     #struct = {}
     #for i in range(1,10001):
     #    struct[i] = []
-    #save_events_cell(struct)
+    #save_events_double(struct)
     #net = load_network_cell()
-    #detect_events(net, 33)
+    #detect_events(net, 0)
     #struct = load_events_cell()
     #print(struct)
     #graph_error()
-    net = tweet_network_single_word()
+    #net = tweet_network_single_word()
+    #print(load_nn_combined([(5638,15,11)],["inter","parma","sampdoria","livorno","ajax","roma","fiorentina","genoa","arctic monkeys", "pixies", "skrillex","bastille", "bring me the horizon"]))
+    word_list = ["inter","parma","sampdoria","livorno","ajax","roma","fiorentina","genoa","arctic monkeys", "pixies", "skrillex","bastille", "bring me the horizon"]
+    #tweet_net = tweet_network(word_list)
+    #cell_net = cell_network_san_siro_only()
+    cell_net = load_network_cell()
+    tweet_net = load_network_tweet()
+    #net = combined_net(word_list)
+    #save_network_combined(net)
+    #net = load_network_combined()
+    detect_events_double(cell_net,tweet_net,0,word_list)
