@@ -208,8 +208,7 @@ def parse_data():
     cdr[8] = (pd.to_datetime(cdr[1],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%w")
     cdr[9] = (pd.to_datetime(cdr[1],unit='ms')+dt.timedelta(hours = 1)).dt.strftime("%H")
     cdr = cdr.groupby([0,8,9]).sum()
-    print(cdr)
-    #cdr.to_csv("merged.csv")
+    cdr.to_csv("merged.csv")
 
 def open_data()->pd.DataFrame:
     """Opens parsed data

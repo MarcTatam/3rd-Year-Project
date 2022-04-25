@@ -97,10 +97,10 @@ def graph_cells(cell_ids:[int], events, filename):
     for event in events:
         for index, row in event_df.loc[event_df["Name"] == event].iterrows():
             start,stop = util.convert_to_project_hourly(row["Date"])
-            ax.axvspan(start,stop, color = "salmon")
+            ax.axvspan(start,stop, color = "silver")
     ax.set_ylabel("Residual based on centroid average")
     ax.set_xlabel("Time in hours since project epoch")
-    ax.set_title("Residual activity of the cells containing the Mediolanum Forum")
+    ax.set_title("Residual activity of the cells containing Alcatraz")
     ax.legend(loc="upper right",prop={'size': 6})
     #plt.show()
     plt.savefig(filename+".png")
@@ -148,7 +148,7 @@ def graph_cells_epoch(cell_ids:[int], events, filename):
     for event in events:
         start = event*24
         stop = event*24 + 23
-        ax.axvspan(start,stop, color = "salmon")
+        ax.axvspan(start,stop, color = "silver")
     ax.set_ylabel("Residual based on centroid average")
     ax.set_xlabel("Time in hours since project epoch")
     ax.legend(loc="upper right",prop={'size': 6})
@@ -157,4 +157,5 @@ def graph_cells_epoch(cell_ids:[int], events, filename):
 
 if __name__ == "__main__":
     #save_merged()
-    graph_cells_epoch([4960,5060,4860,5159,5259], [0,22,23,44], "center")
+    #graph_cells_epoch([4373,4374,4375,4473,4474,4475,4573,4574,4575,4673,4674,4675,4773,4774,4775], [11,24,26,30,31,32,33,34,37,38,42,45,50,51,54,55,58], "distributionresults")
+    graph_cells([6556,6557],["Primal Scream", "Pixies", "Fabri Fibra", "Buckcherry", "Bastille", "Bring Me The Horizon", "Nick Cave and The Bad Seeds", "Jake Bugg"],"alcatraz")

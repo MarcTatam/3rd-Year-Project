@@ -2,6 +2,7 @@ from tweet_processing import Word, open_word, normalise_word, WordDay, open_word
 import matplotlib.pyplot as plt
 import project_utils as util
 import pandas as pd
+import numpy as np
 
 def flatten_word(word:Word)->[float]:
     """Flattens the distribution of the word into a plottable list
@@ -62,6 +63,7 @@ def graph_word_me(word:str, events:[str]):
     ax.set_ylabel("Word Usage")
     ax.set_xlabel("Hours Since Project Epoch")
     ax.set_title(word)
+    ax.xticks(np.arange(-4, 6+1, 2))
     plt.savefig(word+'.png')
 
 def graph_word_day_me(word:str, events:[str]):
@@ -82,6 +84,8 @@ def graph_word_day_me(word:str, events:[str]):
     for i in range(61):
         x.append(i)
     ax.plot(x,y)
+    ax.set_yticks(np.arange(-4, 6+1, 2))
+    ax.set_ybound(-4,7)
     ax.set_ylabel("Word Usage")
     ax.set_xlabel("Days Since Project Epoch")
     ax.set_title(word)
@@ -153,11 +157,11 @@ def graph_alcatraz():
 
 if __name__ == "__main__":
     #graph_word_day_me("internazionale", ["Inter vs Livorno", "Inter vs Sampdoria", "Inter vs Parma", "Inter vs Milan"])
-    #graph_word_day_me("ac milan", ["Inter vs Milan","Milan vs Genoa","Milan vs Fiorentina","Milan vs Roma", "Milan vs Ajax"])
+    graph_word_day_me("ac milan", ["Inter vs Milan","Milan vs Genoa","Milan vs Fiorentina","Milan vs Roma", "Milan vs Ajax"])
     #graph_word_day_me("vs", ["Inter vs Livorno", "Inter vs Sampdoria", "Inter vs Parma", "Inter vs Milan","Milan vs Genoa","Milan vs Fiorentina","Milan vs Roma"])
     #graph_word_day_me("arctic monkeys", ["Arctic Monkeys"])
     #plot_related_time("internazionale",["Inter vs Livorno", "Inter vs Sampdoria", "Inter vs Parma", "Inter vs Milan"])
     #graph_word_day_me("giuseppe meazza", ["Inter vs Livorno", "Inter vs Sampdoria", "Inter vs Parma", "Inter vs Milan","Milan vs Genoa","Milan vs Fiorentina","Milan vs Roma","Milan vs Ajax", "Italy vs Germany"])
-    graph_word_day_me("pixies", ["Pixies"])
+    #graph_word_day_me("pixies", ["Pixies"])
     #plot_related_frequency("internazionale")
     #graph_alcatraz()

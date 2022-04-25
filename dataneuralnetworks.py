@@ -76,9 +76,9 @@ def load_nn_cells(datapoints:[(int,int,int)]):
             temp_array = temp_df[7].to_numpy()
             for i in range(24):
                 if day == 0 or day == 6:
-                    temp_array[i] -= centroids[wanted_centroid].weekend[i]
+                    temp_array[i] -= centroids[wanted_centroid].weekend[i] -weekend[i]
                 else:
-                    temp_array[i] -= centroids[wanted_centroid].weekday[i]
+                    temp_array[i] -= centroids[wanted_centroid].weekday[i] -weekday[i]
             temp_cdf = cdf[cdf["CellID"] == cell]
             temp_array = np.concatenate([temp_array,np.array([temp_cdf.iloc[0]["P1"],temp_cdf.iloc[0]["E3"],temp_cdf.iloc[0]["E4"]])])
             values_dict[(cell, date[0], date[1])] = [temp_array]
