@@ -393,12 +393,13 @@ def tweet_network(word_list):
     net.add(nn.activation(sigmoid, sigmoid_prime))
     net.loss_use(nn.mse,nn.mse_prime)
     net.train(words,actuals,1000,0.1)
-    test = load_nn_tweets(word_list,[1,5,6,7,9,10,11,13,14,15,16,17,18,19,20,21,53,54])
-    test_actual = [[[1]]]
-    test_actual += [[[0]]]*17
+    test_in = []
+    for i in range(61):
+        test_in.append(i)
+    test = load_nn_tweets(word_list,test_in)
     predict = net.predict(test)
-    for i in range(len(test_actual)):
-        print("Actual : " + str(test_actual[i]) + " , Predicted : " + str(predict[i][0]))
+    for i in range(len(test)):
+        print(str(i) + " : " + str(predict[i][0][0]))
     return net
 
 def tweet_network_single_word():
@@ -979,12 +980,12 @@ if __name__ == "__main__":
     #graph_error()
     #net = tweet_network_single_word()
     #print(load_nn_combined([(5638,15,11)],["inter","parma","sampdoria","livorno","ajax","roma","fiorentina","genoa","arctic monkeys", "pixies", "skrillex","bastille", "bring me the horizon"]))
-    word_list = ["inter","parma","sampdoria","livorno","ajax","roma","fiorentina","genoa","arctic monkeys", "pixies", "skrillex","bastille", "bring me the horizon"]
-    #tweet_net = tweet_network(word_list)
+    word_list = ["inter", "ac milan","parma","sampdoria","livorno","ajax","roma","fiorentina","genoa","arctic monkeys"]
+    tweet_net = tweet_network(word_list)
     #cell_net = cell_network_san_siro_only()
-    cell_net = load_network_cell()
-    tweet_net = load_network_tweet()
+    #cell_net = load_network_cell()
+    #tweet_net = load_network_tweet()
     #net = combined_net(word_list)
     #save_network_combined(net)
     #net = load_network_combined()
-    detect_events_double(cell_net,tweet_net,0,word_list)
+    #detect_events_double(cell_net,tweet_net,0,word_list)
