@@ -5,6 +5,7 @@ import geopandas as gpd
 import pandas as pd
 
 def format():
+    """Reformats the census data into cells"""
     out_df = pd.DataFrame(columns=["CellID","P1","E3","E4"])
     with open("milano_istat.json") as f:
         cdf = gpd.read_file(f)
@@ -19,6 +20,7 @@ def format():
     out_df.to_csv("CensusData.csv")
 
 def zscore():
+    """Z-Score normalises the census data"""
     df = pd.read_csv("CensusData.csv", index_col=0)
     #Normalise P1
     mean = df["P1"].mean()
@@ -35,6 +37,7 @@ def zscore():
     df.to_csv("CensusDataZScore.csv")
 
 def minmax():
+    """Minmax normalises the census data"""
     df = pd.read_csv("CensusData.csv", index_col=0)
     #Normalise P1
     minn = df["P1"].min()

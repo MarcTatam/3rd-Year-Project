@@ -7,6 +7,13 @@ START_DATE = "2013-12-01T00:00:00Z"
 END_DATE = "2014-01-01T23:59:59.000Z"
 
 def get_tweets(max_results:int):
+    """Gets the first set of Tweets from the Twitter API
+    
+    Args
+    max_results - number of tweets that should be obtained per page
+    
+    Returns
+    JSON from the API response"""
     with open("keys.json", "r") as f:
         keys = json.load(f)
     url = "https://api.twitter.com/2/tweets/search/all?"+query_builder(max_results)
@@ -21,6 +28,14 @@ def get_tweets(max_results:int):
     return x.json()
 
 def get_tweets_next(max_results:int, next:str):
+    """Gets the subsequent sets of Tweets from the Twitter API
+    
+    Args
+    max_results - number of tweets that should be obtained per page
+    next - next page token
+    
+    Returns
+    JSON from the API response"""
     with open("keys.json", "r") as f:
         keys = json.load(f)
     url = "https://api.twitter.com/2/tweets/search/all?"+query_builder(max_results, next = next)
@@ -35,6 +50,15 @@ def get_tweets_next(max_results:int, next:str):
     return x.json()
 
 def query_builder(max_results: int , fromDate = START_DATE, toDate = END_DATE, next = None):
+    """Builds a query for a get request
+    
+    Args
+    max_results - Number of results to retrieve per request
+    
+    Keyword Args
+    fromDate - Date to start the retreival form. Default is the 1st of November 2013
+    toDate - Date to perform the retreival to. Default is the 1st of January 2013
+    next - next page token"""
     #query = "query=point_radius:"+CIRCLE+"&end_time=" + toDate +"&max_results=10&user.fields=created_at"
     if next != None:
         query = "query=point_radius:"+CIRCLE+"&end_time=" + toDate +"&max_results="+str(max_results)+"&next_token="+next+"&tweet.fields=created_at"
@@ -43,6 +67,7 @@ def query_builder(max_results: int , fromDate = START_DATE, toDate = END_DATE, n
     return query
 
 def data_builder_count_next(max_results: int , fromDate = START_DATE, toDate = END_DATE, next = None):
+    """Function used to test, obsolete"""
     data_dict = {"query" : "point_radius:"+CIRCLE,
                  "fromDate" : fromDate,
                  "toDate" : toDate,
@@ -53,9 +78,14 @@ def data_builder_count_next(max_results: int , fromDate = START_DATE, toDate = E
     return x
 
 def request(url = None, json = None, headers = None):
+    """Function used to test, obsolete"""
     return 
 
 def handle_response(response: dict):
+    """Process the response from a request
+    
+    Args
+    response- response to proccess"""
     next = response["meta"]["next_token"]
     with open("next.txt", "w") as f:
         f.write(next)
@@ -77,10 +107,12 @@ def handle_response(response: dict):
                 json.dump(file_json, f)       
 
 def save_tweets(tweets:dict):
+    """Temporary test function, obsolete"""
     with open("temp.json", "w") as f:
         json.dump(tweets, f)
 
 def load_tweets():
+    """Temporary test function, obsolete"""
     with open("temp.json", "r") as f:
          out = json.load(f)
     return out

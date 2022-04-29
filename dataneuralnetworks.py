@@ -14,22 +14,71 @@ import datetime as dt
 import shapely
 import geopandas as gpd
 
+def project_time(day, month):
+    """Converts from an integer day and month to project day
+    
+    Args
+    day - day to convert
+    month - motnh to convert
+    
+    Returns
+    Integer representing time from project epoch"""
+    if int(month) == 11:
+        return int(day)-1
+    else:
+        return int(day)+29
+
 def relu(input):
+    """Relu activation function implementation
+    
+    Args
+    input - value to find the relu value for
+    
+    Returns
+    float"""
     return np.maximum(input,0)
 
 def relu_prime_single(item):
+    """Relu derivative implementation
+    
+    Args
+    input - value to find the derivative of relu for
+    
+    Returns
+    float"""
     if item > 0 :
         return 1
     elif item < 0:
         return 0
 
 def relu_prime(input):
+    """Applies relu derivative to a list
+    
+    Args
+    input - list to find relu derivative for
+    
+    Returns
+    list with relu derivative values"""
     return np.array(list(map(relu_prime_single, input)))
 
 def sigmoid(input):
+    """Sigmoid activation function implementation
+    
+    Args
+    input - value to find the sigmoid value for
+    
+    Returns
+    float"""
     return 1 / (1 + np.exp(-input))
 
 def sigmoid_prime(input):
+    """Sigmoid derivative implementation
+    
+    Args
+    input - value to find the sigmoid derivative for
+    
+    Returns
+    float"""
     return sigmoid(input)*(1- sigmoid(input))
 
 def generate_test(event_list:[[int]]):
@@ -45,7 +94,13 @@ def generate_test(event_list:[[int]]):
     return np.array(out)
 
 def load_nn_cells(datapoints:[(int,int,int)]):
-    """ID, day, month"""
+    """Loads the cell data for the neural network
+    
+    Args
+    datapoints - cells and dates to get data for in the format: ID, day, month
+    
+    Returns
+    List of values in valid format for the neural network"""
     dates = set()
     date_cell = {}
     for datapoint in datapoints:
@@ -87,14 +142,8 @@ def load_nn_cells(datapoints:[(int,int,int)]):
         out.append(values_dict[datapoint])
     return np.array(out)
 
-def project_time(day, month):
-        if int(month) == 11:
-            return int(day)-1
-        else:
-            return int(day)+29
-
 def load_nn_cells_single(cell_list: [int]):
-    """ID, day, month"""
+    """Created to load cells for an alternative format of the neural networks (daily resolution and select days)"""
     dates = set()
     date_cell = {}
     df = pd.read_csv("loose_merge.csv", index_col = 0)
@@ -141,6 +190,7 @@ def load_nn_cells_single(cell_list: [int]):
     
 
 def load_nn_tweets_single(words:[str]):
+    """Created to load twitter data for an alternative format of the neural networks (daily resolution and select days of events)"""
     distro = []
     base = residual_base()
     for i in words:
@@ -182,7 +232,14 @@ def load_nn_tweets_single(words:[str]):
   
 
 def load_nn_tweets(words:[str], dates: [int]):
-    """dates in time since project epoch"""
+    """Loads the twitter data for the neural network
+    
+    Args
+    words - words to get data for
+    dates - dates to get data for in days since epoch
+    
+    Returns
+    List of values in valid format for the neural network"""
     out = []
     distro = []
     base = residual_base()
@@ -224,6 +281,7 @@ def load_nn_tweets(words:[str], dates: [int]):
     return np.array(out)
 
 def load_nn_combined(datapoints:[(int, int, int)], words: [str]):
+    """Function to load data for a single neural network taking both twitter and mobile phone data"""
     dates = set()
     date_cell = {}
     for datapoint in datapoints:
@@ -306,6 +364,10 @@ def load_nn_combined(datapoints:[(int, int, int)], words: [str]):
    
 
 def cell_network():
+    """Configures and trains the mobile phone neural network
+    
+    Returns
+    Neural Network object"""
     net = nn.network()
     net.add(nn.fclayer(27,18))
     net.add(nn.activation(sigmoid, sigmoid_prime))
@@ -329,6 +391,7 @@ def cell_network():
     return net
 
 def cell_network_single():
+    """Loads and trains an alternative approach to the neural network, where the network is given a set of data for the whole time frame and selects days on which events occur"""
     net = nn.network()
     net.add(nn.fclayer(64,61))
     net.add(nn.activation(sigmoid, sigmoid_prime))
@@ -343,6 +406,7 @@ def cell_network_single():
     return net
 
 def cell_network_san_siro_only():
+    """Similar to cell_network but only a particular subset of data"""
     net = nn.network()
     net.add(nn.fclayer(27,18))
     net.add(nn.activation(sigmoid, sigmoid_prime))
@@ -382,6 +446,13 @@ def cell_network_san_siro_only():
     return net
 
 def tweet_network(word_list):
+    """Configures the Twitter neural network and trains it
+    
+    Args
+    word_list - list of words to train the neural network on
+    
+    Returns
+    Neural network object"""
     words = load_nn_tweets(word_list,[8,22,30,37,51,41,2,3,50,55,56,57,5,6,32,12,45])
     actuals = np.array([[[1]],[[1]],[[1]],[[1]],[[1]],[[0]],[[0]],[[0]],[[0]],[[0]],[[0]],[[0]],[[0]],[[0]],[[0]],[[0]],[[1]]])
     net = nn.network()
@@ -403,6 +474,7 @@ def tweet_network(word_list):
     return net
 
 def tweet_network_single_word():
+    """Loads and trains an alternative approach to the neural network, where the network is given a set of data for the whole time frame and selects days on which events occur"""
     net = nn.network()
     net.add(nn.fclayer(61,61))
     net.add(nn.activation(sigmoid,sigmoid_prime))
@@ -451,10 +523,9 @@ def tweet_network_single_word():
             if test[i][0][j] > 0.5:
                 events[i].append(j)
     print(events)
-    
-
 
 def detect_events(network: nn.network, start_date : int):
+    """Detects events from just the mobile phone network"""
     cdf = pd.read_csv("CensusDataZScore.csv", index_col = 0)
     centroids = load_centroids()
     cells = load_cells()
@@ -547,6 +618,7 @@ def detect_events(network: nn.network, start_date : int):
         print(i)
         
 def graph_error():
+    """Used to graph test error and validation error for early versions of the network"""
     validation_data = [(5638,8,12),(5638,22,12),(5638,2,11),(5638,16,12),(5638,11,12),(5638,26,12),(5638,29,11),(5638,15,12),(5638,28,12),(5638,3,11)]
     validation_actual = [[1],[1],[1],[1],[1],[0],[0],[0],[0],[0]]
     #for i in range(1,30):
@@ -602,6 +674,7 @@ def graph_error():
     plt.show()
 
 def evaluate_cell_net(net):
+    """Used to test the daily resolution mobile phone neural network"""
     struct = {}
     to_load = []
     for i in range(1,10001):
@@ -619,6 +692,13 @@ def evaluate_cell_net(net):
         struct = pickle.dump(struct,f)
 
 def combined_net(word_list):
+    """Configures and trains the combined neural network
+    
+    Args
+    word_list - list of words to configure the network for
+    
+    Returns
+    Neural network object"""
     net = nn.network()
     net.add(nn.fclayer(40,24))
     net.add(nn.activation(sigmoid, sigmoid_prime))
@@ -658,6 +738,7 @@ def combined_net(word_list):
     return net
 
 def detect_events_combined(network: nn.network, start_date : int, word_list):
+    """Detect events using the combined neural network"""
     cdf = pd.read_csv("CensusDataZScore.csv", index_col = 0)
     centroids = load_centroids()
     cells = load_cells()
@@ -778,6 +859,13 @@ def detect_events_combined(network: nn.network, start_date : int, word_list):
         print(i)
 
 def detect_events_double(cell_network: nn.network, tweet_net: nn.network, start_date : int, word_list: [str]):
+    """Final implementation of event detection using both neural networks
+    
+    Args
+    cell_network - mobile phone neural network
+    tweet_net - twitter neural network
+    start_date - date to start detecting events from
+    word_list - words to use to detect events"""
     cdf = pd.read_csv("CensusDataZScore.csv", index_col = 0)
     centroids = load_centroids()
     cells = load_cells()
@@ -900,64 +988,96 @@ def detect_events_double(cell_network: nn.network, tweet_net: nn.network, start_
         print(i)
 
 def save_events_cell(struct: dict):
+    """Saves mobile phone detected events
+    
+    Args
+    struct - detected events to save"""
     with open("cellevents.pkl","wb") as f:
         pickle.dump(struct, f)
 
 def save_events_combined(struct: dict):
+    """Saves combined nn detected events
+    
+    Args
+    struct - detected events to save"""
     with open("combinedevents.pkl","wb") as f:
         pickle.dump(struct, f)
 
 def save_events_double(struct: dict):
+    """Saves events detected by both nn
+    
+    Args
+    struct - detected events to save"""
     with open("doubleevents.pkl","wb") as f:
         pickle.dump(struct, f)
 
 def load_events_cell():
+    """Loads detected events
+    
+    Args
+    returns dictionary with detected events"""
     with open("cellevents.pkl", "rb") as f:
         struct = pickle.load(f)
     return struct
 
 def load_events_combined():
+    """Loads detected events
+    
+    Args
+    returns dictionary with detected events"""
     with open("combinedevents.pkl", "rb") as f:
         struct = pickle.load(f)
     return struct
 
 def load_events_double():
+    """Loads detected events
+    
+    Args
+    returns dictionary with detected events"""
     with open("doubleevents.pkl", "rb") as f:
         struct = pickle.load(f)
     return struct
         
 def save_network_cell(struct: nn.network):
+    """Saves a neural network"""
     with open("cellnetwork.pkl","wb") as f:
         pickle.dump(struct, f)
 
 def save_network_combined(struct: nn.network):
+    """Saves a neural network"""
     with open("combinednetwork.pkl","wb") as f:
         pickle.dump(struct, f)
 
 def save_network_cell_single(struct: nn.network):
+    """Saves a neural network"""
     with open("cellnetworksingle.pkl","wb") as f:
         pickle.dump(struct, f)
 
 def load_network_cell():
+    """Loads a neural network"""
     with open("cellnetwork.pkl", "rb") as f:
         struct = pickle.load(f)
     return struct
 
 def load_network_combined():
+    """Loads a neural network"""
     with open("combinednetwork.pkl", "rb") as f:
         struct = pickle.load(f)
     return struct
 
 def load_network_cell_single():
+    """Loads a neural network"""
     with open("cellnetworksingle.pkl", "rb") as f:
         struct = pickle.load(f)
     return struct
 
 def save_network_tweet(struct: nn.network):
+    """Saves a neural network"""
     with open("tweetnetwork.pkl","wb") as f:
         pickle.dump(struct, f)
 
 def load_network_tweet():
+    """Loads a neural network"""
     with open("tweetnetwork.pkl", "rb") as f:
         struct = pickle.load(f)
     return struct

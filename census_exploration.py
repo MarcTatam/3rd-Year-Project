@@ -1,3 +1,4 @@
+"""This file was used to explore the format of the census data but is not needed for event detection and thus is not commeneted"""
 import fiona
 import shapely
 import keplergl

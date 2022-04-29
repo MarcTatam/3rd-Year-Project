@@ -6,21 +6,32 @@ import datetime as dt
 import project_utils as util
 
 def save_merged():
+    """Saves merged files"""
     df = merge_all()
     df.to_csv("loose_merge.csv")
 
 def load_merged():
+    """Loads merged files"""
     df = pd.read_csv("loose_merge.csv")
     del df["Unnamed: 0"]
     return df
 
 def get_centroid_ind(centroids, target):
+    """Gets the centroid which a cell is attached to
+    
+    Args
+    centroids - list of centroids
+    target - cell to find attachment too"""
     for i in range(len(centroids)):
         for cell_obj in centroids[i].cells:
             if cell_obj.id -1 == target:
                 return i
 
 def graph_cell(cell:int):
+    """Graphs the activity of a cell
+    
+    Args
+    cell - cell to plot activity for"""
     def daytype(arg):
         if arg == 0 or arg == 6:
             return 1
@@ -55,6 +66,12 @@ def graph_cell(cell:int):
     plt.show()
 
 def graph_cells(cell_ids:[int], events, filename):
+    """Graphs the activity of multiple cells, highlighting events
+    
+    Args
+    cell_ids - cells to plot activity for
+    events - events to highlight by name
+    filename - filename to save graph to"""
     def daytype(arg):
         if arg == 0 or arg == 6:
             return 1
@@ -106,6 +123,12 @@ def graph_cells(cell_ids:[int], events, filename):
     plt.savefig(filename+".png")
 
 def graph_cells_epoch(cell_ids:[int], events, filename):
+    """Graphs the activity of multiple cells, highlighting events
+    
+    Args
+    cell_ids - cells to plot activity for
+    events - events to highlight in days from project epoch
+    filename - filename to save graph to"""
     def daytype(arg):
         if arg == 0 or arg == 6:
             return 1
