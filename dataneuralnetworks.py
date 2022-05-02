@@ -376,45 +376,6 @@ def cell_network():
     net.add(nn.fclayer(3,1))
     net.add(nn.activation(sigmoid, sigmoid_prime))
     net.loss_use(nn.mse,nn.mse_prime)
-    expected = [[1],[1],[1],[1],[0],[0],[0],[0],[0]]
-    train_data = [(5638,15,11),(5638,9,11),(5638,23,11),(5638,1,12),(5638,1,11),(5638,30,11),(5638,25,12),(5638,28,12),(5638,30,12)]
-    train_data += [(3912, 31, 12),(3710, 31, 12), (1782, 5, 11), (2359, 2, 11), (2359, 16, 11), (2359, 30, 11), (5259, 1, 11), (5259,2,11), (5259,9,11), (7468,2,11), (4511, 5 ,11)]
-    expected += [[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0]]
-    expected = np.array(expected)
-    train_data = load_nn_cells(train_data)
-    net.train(train_data,expected,1000,0.1)
-    test_data = load_nn_cells([(5638,8,12),(5638,22,12),(5638,2,11),(5638,16,12),(5638,11,12),(5638,26,12),(5638,29,11),(5638,15,12),(5638,28,12),(5638,3,11)])
-    predicted = net.predict(test_data)
-    actual = [1,1,1,1,1,0,0,0,0,0]
-    for i in range(len(actual)):
-        print("Actual : " + str(actual[i]) + " , Predicted : " + str(predicted[i][0]))
-    return net
-
-def cell_network_single():
-    """Loads and trains an alternative approach to the neural network, where the network is given a set of data for the whole time frame and selects days on which events occur"""
-    net = nn.network()
-    net.add(nn.fclayer(64,61))
-    net.add(nn.activation(sigmoid, sigmoid_prime))
-    net.add(nn.fclayer(61,61))
-    net.add(nn.activation(sigmoid, sigmoid_prime))
-    net.loss_use(nn.mse,nn.mse_prime)
-    train_data = load_nn_cells_single([5638,2359,2362,1982])
-    train_actuals = generate_test([[8,14,22,1,30,37,51,45,40],[],[],[]])
-    net.train(train_data,train_actuals,1000,0.1)
-    test_data = load_nn_cells_single([5837,1615])
-    predicted = net.predict(test_data)
-    return net
-
-def cell_network_san_siro_only():
-    """Similar to cell_network but only a particular subset of data"""
-    net = nn.network()
-    net.add(nn.fclayer(27,18))
-    net.add(nn.activation(sigmoid, sigmoid_prime))
-    net.add(nn.fclayer(18,3))
-    net.add(nn.activation(sigmoid, sigmoid_prime))
-    net.add(nn.fclayer(3,1))
-    net.add(nn.activation(sigmoid, sigmoid_prime))
-    net.loss_use(nn.mse,nn.mse_prime)
     event_days = [(5638,15,11),(5638,9,11),(5638,1,12),(5638,8,12),(5638,22,12),(5638,23,11),(5638,2,11),(5638,16,12),(5638,11,12)]
     expected = [[1],[1],[1],[1],[1],[1],[1],[1],[1]]
     train_data = event_days
@@ -439,10 +400,25 @@ def cell_network_san_siro_only():
     expected = np.array(expected)
     train_data = load_nn_cells(train_data)
     net.train(train_data,expected,10000,0.1)
-    test_data = load_nn_cells(test_data)
-    predicted = net.predict(test_data)
+    #test_data = load_nn_cells(test_data)
+    #predicted = net.predict(test_data)
     for i in range(len(actual)):
         print("Actual : " + str(actual[i]) + " , Predicted : " + str(predicted[i][0]))
+    return net
+
+def cell_network_single():
+    """Loads and trains an alternative approach to the neural network, where the network is given a set of data for the whole time frame and selects days on which events occur"""
+    net = nn.network()
+    net.add(nn.fclayer(64,61))
+    net.add(nn.activation(sigmoid, sigmoid_prime))
+    net.add(nn.fclayer(61,61))
+    net.add(nn.activation(sigmoid, sigmoid_prime))
+    net.loss_use(nn.mse,nn.mse_prime)
+    train_data = load_nn_cells_single([5638,2359,2362,1982])
+    train_actuals = generate_test([[8,14,22,1,30,37,51,45,40],[],[],[]])
+    net.train(train_data,train_actuals,1000,0.1)
+    test_data = load_nn_cells_single([5837,1615])
+    predicted = net.predict(test_data)
     return net
 
 def tweet_network(word_list):
@@ -1089,10 +1065,10 @@ if __name__ == "__main__":
     #net = load_network_cell_single()
     #net = cell_network_san_siro_only()
     #net = save_network_cell(net)
-    #struct = {}
-    #for i in range(1,10001):
-    #    struct[i] = []
-    #save_events_double(struct)
+    struct = {}
+    for i in range(1,10001):
+       struct[i] = []
+    save_events_double(struct)
     #net = load_network_cell()
     #detect_events(net, 0)
     #struct = load_events_cell()
@@ -1101,11 +1077,7 @@ if __name__ == "__main__":
     #net = tweet_network_single_word()
     #print(load_nn_combined([(5638,15,11)],["inter","parma","sampdoria","livorno","ajax","roma","fiorentina","genoa","arctic monkeys", "pixies", "skrillex","bastille", "bring me the horizon"]))
     word_list = ["inter", "ac milan","parma","sampdoria","livorno","ajax","roma","fiorentina","genoa","arctic monkeys"]
+    #print(load_nn_tweets(word_list,[1]))
     tweet_net = tweet_network(word_list)
-    #cell_net = cell_network_san_siro_only()
-    #cell_net = load_network_cell()
-    #tweet_net = load_network_tweet()
-    #net = combined_net(word_list)
-    #save_network_combined(net)
-    #net = load_network_combined()
-    #detect_events_double(cell_net,tweet_net,0,word_list)
+    cell_net = cell_network()
+    detect_events_double(cell_net,tweet_net,0,word_list)

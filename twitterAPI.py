@@ -1,7 +1,9 @@
 import requests
+import requests_mock
 import json
 import datetime as dt
 import time
+import unittest
 CIRCLE = "[9.189731 45.464157 12km]"
 START_DATE = "2013-12-01T00:00:00Z"
 END_DATE = "2014-01-01T23:59:59.000Z"
@@ -18,6 +20,7 @@ def get_tweets(max_results:int):
         keys = json.load(f)
     url = "https://api.twitter.com/2/tweets/search/all?"+query_builder(max_results)
     x = requests.get(url, headers = {"Authorization" : "Bearer " + keys["Bearer Elevated"]})
+    print(x.text)
     print(x.headers["x-rate-limit-reset"])
     if x.status_code == 428:
         wait_time = int(x.headers["x-rate-limit-reset"])
@@ -25,6 +28,30 @@ def get_tweets(max_results:int):
         time.sleep(wait_time)
         print("Proceeding")
         x = requests.get(url, headers = {"Authorization" : "Bearer " + keys["Bearer Elevated"]})
+    return x.json()
+
+def get_tweets_test(max_results:int):
+    """Test function for getting the first set of Tweets from the Twitter API
+    
+    Args
+    max_results - number of tweets that should be obtained per page
+    
+    Returns
+    JSON from the API response"""
+    with open("keys.json", "r") as f:
+        keys = json.load(f)
+    url = "https://api.twitter.com/2/tweets/search/all?"+query_builder(max_results)
+    with requests_mock.Mocker() as m:
+        m.get(url, headers = {"Authorization" : "Bearer " + keys["Bearer Elevated"]},status_code=428)
+        x= request.get(url, headers = {"Authorization" : "Bearer " + keys["Bearer Elevated"]})
+        history = m.request_history[0]
+        print(history.query)
+        if x.status_code == 428:
+            wait_time = int(x.headers["x-rate-limit-reset"])
+            print("Rate exceeded proceeding in " +str(wait_time))
+            time.sleep(wait_time)
+            print("Proceeding")
+            x = requests.get(url, headers = {"Authorization" : "Bearer " + keys["Bearer Elevated"]})
     return x.json()
 
 def get_tweets_next(max_results:int, next:str):
@@ -116,12 +143,10 @@ def load_tweets():
     with open("temp.json", "r") as f:
          out = json.load(f)
     return out
+
 if __name__ == "__main__":
-    #with open("next.txt", "r") as f:
-    #    next = f.read()
-    #print(next)
-    #tweets = get_tweets(500)
-    #handle_response(tweets)
+    tweets = get_tweets(500)
+    handle_response(tweets)
     for i in range(0,200):
         with open("next.txt", "r") as f:
             next = f.read()

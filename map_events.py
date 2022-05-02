@@ -351,7 +351,7 @@ def map_nn_events_double():
 			'latitude': 45.455934682435,
 			'longitude': 9.23461965432608,
 			'pitch': 0,
-			'zoom': 10.451941083083048,
+			'zoom': 13.451941083083048,
 			'isSplit': False
 		},
 		'mapStyle': {
@@ -378,4 +378,4 @@ def map_nn_events_double():
 
 
 if __name__ == "__main__":
-    map_nn_events_double()
+    map_events()

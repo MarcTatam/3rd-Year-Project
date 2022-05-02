@@ -179,6 +179,4 @@ def graph_cells_epoch(cell_ids:[int], events, filename):
     plt.savefig(filename+".png")
 
 if __name__ == "__main__":
-    #save_merged()
-    #graph_cells_epoch([4373,4374,4375,4473,4474,4475,4573,4574,4575,4673,4674,4675,4773,4774,4775], [11,24,26,30,31,32,33,34,37,38,42,45,50,51,54,55,58], "distributionresults")
-    graph_cells([6556,6557],["Primal Scream", "Pixies", "Fabri Fibra", "Buckcherry", "Bastille", "Bring Me The Horizon", "Nick Cave and The Bad Seeds", "Jake Bugg"],"alcatraz")
+    graph_cells_epoch([1], [1,2,4,8,16], "demonstration")

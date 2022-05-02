@@ -441,20 +441,20 @@ def centroids_daily_pattern():
             
 
 if __name__ == "__main__":
-    #parse_data()
-    #cdr = open_data()
-    #cdr = sort_daytype(cdr)
-    #cdr = cdr.groupby(["0","8","9"]).sum().reset_index()
+    parse_data()
+    cdr = open_data()
+    cdr = sort_daytype(cdr)
+    cdr = cdr.groupby(["0","8","9"]).sum().reset_index()
     #print(cdr)
-    #cells = format_data_all(cdr[cdr["8"]==0], cdr[cdr["8"]==1])
-    #cells = zscore_normalise(cells)
-    #save_cells(cells)
+    cells = format_data_all(cdr[cdr["8"]==0], cdr[cdr["8"]==1])
+    cells = zscore_normalise(cells)
+    save_cells(cells)
     #print(len(cells[0].weekend))
     #cells = load_cells()
     #cells = convert_to_residual(cells)[0]
     #minn,maxx = get_min_max(cells)
     #centroids = k_means(1000, 5, cells, minn, maxx)
     #save_centroids(centroids)
-    centroids_daily_pattern()
+    #centroids_daily_pattern()
     
 

@@ -318,15 +318,15 @@ def extra_tweets(start_word:str)->int:
 
 if __name__ == "__main__":
     #nltk.download("stopwords")
-    #word = search_word_day("pixies")
-    #word = normalise_word_day(word)
-    #base_pattern = residual_base()
+    word = search_word_day("inter")
+    word = normalise_word_day(word)
+    base_pattern = residual_base()
     #word = open_word_day("#inter")
-    #word = residual_pattern(base_pattern,word)
-    #save_word_day(word)
-    #tweets = containing_tweets("internazionale")
-    #print(similar_words(tweets, "internazionale"))
-    print(extra_tweets("internazionale"))
+    word = residual_pattern(base_pattern,word)
+    save_word_day(word)
+    #tweets = containing_tweets("#inter")
+    #print(similar_words(tweets, "#inter"))
+    #print(len(containing_tweets("genoa")))
 
 
 

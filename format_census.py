@@ -54,4 +54,4 @@ def minmax():
     df.to_csv("CensusDataMinMax.csv")
 
 if __name__ == "__main__":
-    minmax()
+    zscore()
